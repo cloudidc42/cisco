@@ -477,22 +477,13 @@ InfluxDB เก็บข้อมูลแบบ **Line Protocol**: `measurement
 ### ตัวอย่าง Schema ที่ออกแบบถูกและผิด
 
 ```
-❌ Schema ที่ออกแบบผิด — Cardinality Explosion
+❌ ผิด: interface_stats,device=CORE-SW1 interface="Te1/0/1",in_octets=128456789
+        (interface เป็น Field — Query "หา in_octets ของ Te1/0/1" ต้อง Scan ทุก Row
+         เพราะไม่ได้ Index, ที่ 500 อุปกรณ์ × 48 พอร์ต ช้าลงเป็นวินาทีถึงนาที)
 
-interface_stats,device=CORE-SW1 interface="Te1/0/1",in_octets=128456789,timestamp_str="2026-09-26T14:22:00"
-                                  ^ interface เป็น Field (ควรเป็น Tag เพราะ Filter บ่อย)
-
-ผลลัพธ์: Query "หา in_octets ของ Te1/0/1 ทุกช่วงเวลา" ต้อง Scan ทุก Row เพราะ interface
-ไม่ได้ Index — ที่ 500 อุปกรณ์ × 48 พอร์ต Query แบบนี้ช้าลงเป็นวินาทีถึงนาที
-
-
-✅ Schema ที่ออกแบบถูก
-
-interface_stats,device=CORE-SW1,interface=Te1/0/1,site=hq-campus in_octets=128456789,in_errors=0 1758895320000000000
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Tag (Indexed, Cardinality ~500×48×N-site)
-                                                                  ^^^^^^^^^^^^^^^^^^ Field (ค่าที่เปลี่ยนทุก Sample)
-
-ผลลัพธ์: Query filter ด้วย device+interface ใช้ Index ตรง — เร็วระดับ millisecond แม้ Volume สูง
+✅ ถูก:  interface_stats,device=CORE-SW1,interface=Te1/0/1,site=hq-campus in_octets=128456789,in_errors=0
+        (device/interface/site เป็น Tag → Indexed, in_octets/in_errors เป็น Field
+         → Query filter ด้วย device+interface ใช้ Index ตรง เร็วระดับ millisecond แม้ Volume สูง)
 ```
 
 | หลักการเลือก Tag/Field สำหรับ Telemetry ของหลักสูตรนี้ | ตัวอย่างจาก Lab |
@@ -506,19 +497,10 @@ interface_stats,device=CORE-SW1,interface=Te1/0/1,site=hq-campus in_octets=12845
 ที่ 345 GB/วัน (Step 791) ถ้าเก็บ Raw Data ไว้ตลอดไปจะใช้ **~10 TB ภายใน 1 เดือน** — ต้องมี
 กลยุทธ์ลดขนาดข้อมูลเก่าที่ยังต้องการเห็น Trend ระยะยาวแต่ไม่ต้องการ Resolution ระดับวินาทีอีกต่อไป
 
-```
-กลยุทธ์ Retention/Downsampling แบบ Tiered (ใช้ใน InfluxDB Tasks / Continuous Query)
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│ Raw Data (Resolution เต็ม 10s)          → เก็บ 7 วัน  → Bucket: telemetry  │
-│         │ downsample (mean/max ทุก 5 นาที)                               │
-│         ▼                                                                  │
-│ 5-minute Rollup                          → เก็บ 90 วัน → Bucket: telemetry_5m│
-│         │ downsample (mean/max ทุก 1 ชั่วโมง)                              │
-│         ▼                                                                  │
-│ 1-hour Rollup                            → เก็บ 2 ปี   → Bucket: telemetry_1h│
-└─────────────────────────────────────────────────────────────────────────┘
-```
+กลยุทธ์ Retention/Downsampling แบบ Tiered (ใช้ใน InfluxDB Tasks / Continuous Query):
+**Raw Data** (Resolution เต็ม 10s, เก็บ 7 วัน, Bucket `telemetry`) → downsample mean/max ทุก
+5 นาที → **5-minute Rollup** (เก็บ 90 วัน, Bucket `telemetry_5m`) → downsample ทุก 1 ชั่วโมง →
+**1-hour Rollup** (เก็บ 2 ปี, Bucket `telemetry_1h`)
 
 ### InfluxDB Task (Flux) สำหรับ Downsampling อัตโนมัติ
 
