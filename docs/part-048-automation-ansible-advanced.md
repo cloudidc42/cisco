@@ -1138,21 +1138,9 @@ Support และฟีเจอร์เพิ่มเติม (Automation Hu
 
 ### แนวคิดหลักของ AWX/AAP ที่ทีม NetOps ต้องรู้จัก
 
-```
-Laptop วิศวกรคนเดียว                          AWX / AAP (Platform ระดับทีม)
-┌───────────────────────┐                   ┌─────────────────────────────────┐
-│ ansible-playbook       │                   │  Web UI / REST API               │
-│ (รันตรงจาก Terminal)   │      ประเมิน       │  ├─ Projects (ดึง Playbook จาก Git) │
-│                        │  ───────────────▶ │  ├─ Inventories (Sync จาก Source)  │
-│ Vault Password         │                   │  ├─ Credentials (เก็บรวมศูนย์)      │
-│ อยู่บนเครื่องตัวเอง      │                   │  ├─ Job Templates (Playbook + Var) │
-│                        │                   │  ├─ RBAC (ใครรัน Template ไหนได้)  │
-│ ไม่มี Schedule          │                   │  ├─ Schedules (รันอัตโนมัติตามรอบ) │
-│ ไม่มี Audit             │                   │  ├─ Workflow Templates (ต่อหลาย    │
-│                        │                   │  │   Job Template เป็น Pipeline)   │
-│                        │                   │  └─ Job History + Audit Log ครบ    │
-└───────────────────────┘                   └─────────────────────────────────┘
-```
+จาก "รัน `ansible-playbook` ตรงจาก Terminal ด้วย Vault Password ที่อยู่บนเครื่องตัวเอง ไม่มี
+Schedule ไม่มี Audit" กลายเป็น Platform เดียวที่มี Web UI/REST API ครอบไว้ทั้ง Project, Inventory,
+Credential, Job Template, RBAC, Schedule, Workflow Template และ Job History/Audit Log ครบวงจร:
 
 | แนวคิด | ความหมาย |
 |---|---|
@@ -1166,15 +1154,11 @@ Laptop วิศวกรคนเดียว                          AWX / AA
 
 ### ตัวอย่าง Flow การทำงานจริงของทีม NetOps ที่ใช้ AWX/AAP
 
-```
-1. วิศวกร A เขียน Role ใหม่ (เช่น เพิ่ม VLAN ใหม่) → commit + push เข้า Git
-2. AWX Sync Project อัตโนมัติ ดึง commit ล่าสุดมา (Webhook หรือ Poll ตามรอบ)
-3. วิศวกร B (คนละคน, RBAC อนุญาตให้รัน Job Template นี้) เข้า Web UI กด "Launch"
-   -> เลือก Survey (ถามค่าตัวแปร เช่น "จะสร้าง VLAN เลขที่เท่าไหร่?") ผ่านฟอร์มบนเว็บ ไม่ต้องแก้ YAML
-4. AWX รัน Job ด้วย Credential ที่เก็บรวมศูนย์ (วิศวกร B ไม่เห็น Vault Password จริงเลย)
-5. ผลลัพธ์ทั้งหมด (stdout, changed count, error) ถูกบันทึกใน Job History พร้อม timestamp/ผู้รัน
-6. ถ้าตั้ง Notification ไว้ -> ส่งผลลัพธ์เข้า Slack/Email/ITSM Ticket อัตโนมัติ
-```
+วิศวกร A เขียน Role ใหม่ (เช่น เพิ่ม VLAN) แล้ว commit เข้า Git → AWX Sync Project อัตโนมัติ →
+วิศวกร B (RBAC อนุญาตแล้ว) เข้า Web UI กด "Launch" และตอบ Survey (เช่น "VLAN เลขที่เท่าไหร่?") ผ่าน
+ฟอร์มโดยไม่ต้องแก้ YAML เอง → AWX รัน Job ด้วย Credential ที่เก็บรวมศูนย์ (วิศวกร B ไม่เห็น Vault
+Password จริง) → ผลลัพธ์ถูกบันทึกใน Job History พร้อม timestamp/ผู้รัน → ถ้าตั้ง Notification ไว้
+ก็ส่งเข้า Slack/Email/ITSM Ticket ต่ออัตโนมัติ
 
 > **จุดเชื่อมกับ Part อื่นในหลักสูตร**: AWX/AAP คือจุดที่ Ansible Project แบบที่เราสร้างใน Part นี้
 > (`day2-ops` พร้อม Role/Tag/Handler/Vault) กลายเป็นส่วนหนึ่งของ **CI/CD Pipeline สำหรับ
@@ -1414,15 +1398,9 @@ aaa_tacacs_server_name: "AAA-SRV1"
   tags: ["acl", "security", "day2-ops"]
 ```
 
-**`handlers/main.yaml`**
-
-```yaml
----
-- name: save running-config
-  cisco.ios.ios_config:
-    save_when: always
-  listen: "save running-config"
-```
+`handlers/main.yaml` ของ Role นี้ใช้ Pattern `listen: "save running-config"` เดียวกันกับ
+`roles/ntp-syslog/handlers/main.yaml` ทุกตัวอักษร (Handler ชื่อเดียวกันทำให้ทั้ง 3 Role notify
+มารวมกันและ save แค่ครั้งเดียวท้าย Play ตามที่อธิบายใน Step 473)
 
 ### Role 3 — `roles/vlan-provisioning/`
 
@@ -1463,15 +1441,9 @@ vlan_provisioning_target_group: "dist_switches"
   tags: ["vlan", "day2-ops"]
 ```
 
-**`handlers/main.yaml`**
-
-```yaml
----
-- name: save running-config
-  cisco.ios.ios_config:
-    save_when: always
-  listen: "save running-config"
-```
+Role นี้ก็ใช้ `handlers/main.yaml` Pattern เดียวกันอีกครั้ง (ดู `roles/ntp-syslog/handlers/main.yaml`
+ด้านบน) — ทั้ง 3 Role notify มาที่ Handler ชื่อเดียวกัน ทำให้ `site.yaml` save config แค่ครั้งเดียว
+ท้าย Play ไม่ว่าจะมีกี่ Role เปลี่ยน config พร้อมกันก็ตาม
 
 ### `site.yaml` — Playbook หลักที่รวมทั้ง 3 Role
 
