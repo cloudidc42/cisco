@@ -60,36 +60,36 @@ Lab scenario, และคำถามทวนความเข้าใจพ
 
 | Part | Step | หัวข้อ | สถานะ |
 |---|---|---|---|
-| 26 | 251–260 | Advanced OSPF (Multi-area, LSA Type 1-7) | ⏳ |
-| 27 | 261–270 | OSPFv3 for IPv6 | ⏳ |
-| 28 | 271–280 | EIGRP Advanced (Named Mode, Summarization) | ⏳ |
-| 29 | 281–290 | BGP Fundamentals (eBGP) | ⏳ |
-| 30 | 291–300 | BGP Advanced (iBGP, RR, Attributes, Path Selection) | ⏳ |
-| 31 | 301–310 | Route Redistribution & Route-maps | ⏳ |
-| 32 | 311–320 | Policy-Based Routing | ⏳ |
-| 33 | 321–330 | Advanced STP & Campus Multilayer Design | ⏳ |
-| 34 | 331–340 | StackWise / VSS / Multichassis EtherChannel | ⏳ |
-| 35 | 341–350 | Advanced FHRP & Campus HA | ⏳ |
-| 36 | 351–360 | Wireless Architecture Deep Dive (CAPWAP, Roaming) | ⏳ |
-| 37 | 361–370 | Wireless Security Advanced | ⏳ |
-| 38 | 371–380 | SD-Access Fundamentals | ⏳ |
-| 39 | 381–390 | SD-WAN Fundamentals (Viptela) | ⏳ |
-| 40 | 391–400 | Advanced QoS (MQC, Queuing, Shaping/Policing) | ⏳ |
-| 41 | 401–410 | Multicast Fundamentals (IGMP, PIM-DM/SM) | ⏳ |
-| 42 | 411–420 | Multicast Advanced (RP, MSDP, Anycast RP) | ⏳ |
-| 43 | 421–430 | Security Architecture (Firepower, ISE Intro) | ⏳ |
-| 44 | 431–440 | 802.1X & Cisco TrustSec | ⏳ |
-| 45 | 441–450 | Advanced ACL & Zone-Based Firewall | ⏳ |
-| 46 | 451–460 | Control Plane Policing & Infra Security | ⏳ |
-| 47 | 461–470 | Automation: Python for Network Engineers | ⏳ |
-| 48 | 471–480 | Automation: Ansible for Network Engineers | ⏳ |
-| 49 | 481–490 | APIs, YANG, NETCONF/RESTCONF Deep Dive | ⏳ |
-| 50 | 491–500 | Cisco DNA Center / Catalyst Center | ⏳ |
-| 51 | 501–510 | VRF-Lite, GRE, IPsec VPN | ⏳ |
-| 52 | 511–520 | DMVPN Fundamentals | ⏳ |
-| 53 | 521–530 | DMVPN Advanced (Phase 3, Dual-Hub) | ⏳ |
-| 54 | 531–540 | Network Assurance & Telemetry | ⏳ |
-| 55 | 541–550 | ENCOR Capstone Lab & Exam Prep | ⏳ |
+| 26 | 251–260 | [part-026-advanced-ospf.md](docs/part-026-advanced-ospf.md) | Advanced OSPF (Filtering, Stub Router, BFD) | ✅ |
+| 27 | 261–270 | [part-027-ospfv3-ipv6.md](docs/part-027-ospfv3-ipv6.md) | OSPFv3 for IPv6 | ✅ |
+| 28 | 271–280 | [part-028-eigrp-advanced.md](docs/part-028-eigrp-advanced.md) | EIGRP Advanced (Named Mode, Summarization) | ✅ |
+| 29 | 281–290 | [part-029-bgp-fundamentals.md](docs/part-029-bgp-fundamentals.md) | BGP Fundamentals (eBGP) | ✅ |
+| 30 | 291–300 | [part-030-bgp-advanced.md](docs/part-030-bgp-advanced.md) | BGP Advanced (iBGP, RR, Attributes, Path Selection) | ✅ |
+| 31 | 301–310 | [part-031-route-redistribution.md](docs/part-031-route-redistribution.md) | Route Redistribution & Route-maps | ✅ |
+| 32 | 311–320 | [part-032-policy-based-routing.md](docs/part-032-policy-based-routing.md) | Policy-Based Routing | ✅ |
+| 33 | 321–330 | [part-033-advanced-stp-campus-design.md](docs/part-033-advanced-stp-campus-design.md) | Advanced STP & Campus Multilayer Design | ✅ |
+| 34 | 331–340 | [part-034-stackwise-vss-mec.md](docs/part-034-stackwise-vss-mec.md) | StackWise / VSS / Multichassis EtherChannel | ✅ |
+| 35 | 341–350 | [part-035-advanced-fhrp-campus-ha.md](docs/part-035-advanced-fhrp-campus-ha.md) | Advanced FHRP & Campus HA | ✅ |
+| 36 | 351–360 | [part-036-wireless-architecture-deep-dive.md](docs/part-036-wireless-architecture-deep-dive.md) | Wireless Architecture Deep Dive (CAPWAP, Roaming) | ✅ |
+| 37 | 361–370 | [part-037-wireless-security-advanced.md](docs/part-037-wireless-security-advanced.md) | Wireless Security Advanced | ✅ |
+| 38 | 371–380 | [part-038-sd-access-fundamentals.md](docs/part-038-sd-access-fundamentals.md) | SD-Access Fundamentals | ✅ |
+| 39 | 381–390 | [part-039-sd-wan-fundamentals.md](docs/part-039-sd-wan-fundamentals.md) | SD-WAN Fundamentals (Viptela) | ✅ |
+| 40 | 391–400 | [part-040-advanced-qos.md](docs/part-040-advanced-qos.md) | Advanced QoS (MQC, Queuing, Shaping/Policing) | ✅ |
+| 41 | 401–410 | [part-041-multicast-fundamentals.md](docs/part-041-multicast-fundamentals.md) | Multicast Fundamentals (IGMP, PIM-DM/SM) | ✅ |
+| 42 | 411–420 | [part-042-multicast-advanced.md](docs/part-042-multicast-advanced.md) | Multicast Advanced (RP, MSDP, Anycast RP) | ✅ |
+| 43 | 421–430 | [part-043-security-architecture-firepower-ise.md](docs/part-043-security-architecture-firepower-ise.md) | Security Architecture (Firepower, ISE Intro) | ✅ |
+| 44 | 431–440 | [part-044-dot1x-trustsec.md](docs/part-044-dot1x-trustsec.md) | 802.1X & Cisco TrustSec | ✅ |
+| 45 | 441–450 | [part-045-advanced-acl-zbfw.md](docs/part-045-advanced-acl-zbfw.md) | Advanced ACL & Zone-Based Firewall | ✅ |
+| 46 | 451–460 | [part-046-control-plane-policing.md](docs/part-046-control-plane-policing.md) | Control Plane Policing & Infra Security | ✅ |
+| 47 | 461–470 | [part-047-automation-python-advanced.md](docs/part-047-automation-python-advanced.md) | Automation: Python for Network Engineers | ✅ |
+| 48 | 471–480 | [part-048-automation-ansible-advanced.md](docs/part-048-automation-ansible-advanced.md) | Automation: Ansible for Network Engineers | ✅ |
+| 49 | 481–490 | [part-049-netconf-restconf-yang-deep-dive.md](docs/part-049-netconf-restconf-yang-deep-dive.md) | APIs, YANG, NETCONF/RESTCONF Deep Dive | ✅ |
+| 50 | 491–500 | [part-050-dna-center.md](docs/part-050-dna-center.md) | Cisco DNA Center / Catalyst Center | ✅ |
+| 51 | 501–510 | [part-051-vrf-lite-gre-ipsec.md](docs/part-051-vrf-lite-gre-ipsec.md) | VRF-Lite, GRE, IPsec VPN | ✅ |
+| 52 | 511–520 | [part-052-dmvpn-fundamentals.md](docs/part-052-dmvpn-fundamentals.md) | DMVPN Fundamentals | ✅ |
+| 53 | 521–530 | [part-053-dmvpn-advanced.md](docs/part-053-dmvpn-advanced.md) | DMVPN Advanced (Phase 3, Dual-Hub) | ✅ |
+| 54 | 531–540 | [part-054-network-assurance-telemetry.md](docs/part-054-network-assurance-telemetry.md) | Network Assurance & Telemetry | ✅ |
+| 55 | 541–550 | [part-055-encor-capstone-lab.md](docs/part-055-encor-capstone-lab.md) | ENCOR Capstone Lab & Exam Prep | ✅ |
 
 ### ระดับ CCNP ENARSI (Part 56–70)
 
