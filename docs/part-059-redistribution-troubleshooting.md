@@ -1072,38 +1072,21 @@ CPU utilization for five seconds: 42%/30%; one minute: 38%; five minutes: 35%
 
 ### กระบวนการวินิจฉัยแบบเป็นระบบ (ใช้ Flowchart จาก Step 581)
 
-```
-Ticket 1: "Legacy Server เข้าไม่ได้จาก Campus" -> ทิศทาง OSPF -> EIGRP มีปัญหาแน่นอน
-=========================================================================
-Step 1: ที่ DIST-SW3 (ASBR ทิศทางนี้) - ยืนยันฝั่ง Source (OSPF) มี Route จริง
-```
+**Ticket 1 (OSPF→EIGRP)**: ยืนยันฝั่ง Source (OSPF) มี Route จริงก่อน แล้วไล่ตรวจ ASBR
+DIST-SW3:
 
 ```
 DIST-SW3# show ip route ospf | include 10.10.10.0
 O    10.10.10.0/24 [110/11] via 10.255.30.1, 00:20:04, TenGigabitEthernet1/0/1
-```
 
-Source มี Route แน่นอน → ปัญหาอยู่ที่ตัว Redistribution เอง (ไม่ใช่ปัญหา OSPF)
-
-```
-Step 2: show ip protocols ที่ DIST-SW3 ฝั่ง EIGRP
-```
-
-```
+! Source มี Route แน่นอน -> ปัญหาอยู่ที่ตัว Redistribution เอง ตรวจ show ip protocols ต่อ
 DIST-SW3# show ip protocols | begin eigrp
 Routing Protocol is "eigrp EIGRP-DEMO"
   Redistributing: eigrp EIGRP-DEMO
     Redistributing External Routes from,
       ospf 1 (route-map OSPF-TO-EIGRP)
-```
 
-Redistribute Statement มีอยู่จริง แต่ไม่มีบรรทัดบอก Metric ที่ใช้ → เจาะ Running-config ต่อ
-
-```
-Step 3: show run | section router eigrp -> พบ Root Cause บั๊กที่ 1
-```
-
-```
+! Statement มีอยู่จริงแต่ไม่มีบรรทัดบอก Metric -> เจาะ Running-config
 DIST-SW3# show run | section router eigrp
 router eigrp EIGRP-DEMO
  address-family ipv4 unicast autonomous-system 100
@@ -1114,11 +1097,8 @@ router eigrp EIGRP-DEMO
 **ไม่มี `metric` เลย** — ยืนยัน Root Cause ของ Ticket 1: Seed Metric หายไปจาก Config ตอน
 Restore Backup (เหมือน Step 582 Case A เป๊ะ)
 
-```
-Ticket 2: "Neighbor Flap + CPU สูง" -> สงสัย Loop จาก Tag Filter (อาการ Flap/Metric ไม่คงที่)
-=========================================================================
-Step 4: ที่ DIST-SW4 - ตรวจ Route-map ที่ควบคุม Loop-guard
-```
+**Ticket 2 (Loop จาก Tag Filter)**: ตรวจ Route-map Loop-guard ที่ DIST-SW4 และยืนยันด้วย
+OSPF LSA Sequence Number:
 
 ```
 DIST-SW4# show route-map OSPF-TO-EIGRP
@@ -1127,17 +1107,8 @@ route-map OSPF-TO-EIGRP, permit, sequence 20
   Set clauses:
     tag 110
   Policy routing matches: 4102 packets, ...
-```
 
-**ไม่มี Sequence `deny 10 match tag 90` เลย** — ยืนยัน Root Cause ของ Ticket 2: Loop-guard
-หายไปจาก DIST-SW4 (เหมือน Step 583 เป๊ะ) ทำให้ Route ที่มี Tag 90 (มาจากฝั่ง EIGRP ผ่าน
-DIST-SW3 อยู่แล้ว) วิ่งวนกลับเข้า EIGRP อีกรอบผ่าน DIST-SW4 สร้าง Flap และภาระ CPU เพิ่ม
-
-```
-Step 5: ยืนยันด้วย OSPF Database ว่า LSA Sequence Number ของ Prefix Campus วิ่งเร็วผิดปกติจริง
-```
-
-```
+! ไม่มี Sequence deny 10 match tag 90 เลย -> ยืนยันด้วย LSA Sequence Number ที่ CORE-SW2
 CORE-SW2# show ip ospf database external 10.10.20.0
   Advertising Router: 1.1.1.14
   LS Seq Number: 80000037
@@ -1146,6 +1117,10 @@ CORE-SW2# show ip ospf database external 10.10.20.0
   Advertising Router: 1.1.1.14
   LS Seq Number: 8000004C     <--- วิ่งขึ้นเร็วมาก ยืนยัน Loop จริง
 ```
+
+**ไม่มี Sequence `deny 10 match tag 90` เลย** — ยืนยัน Root Cause ของ Ticket 2: Loop-guard
+หายไปจาก DIST-SW4 (เหมือน Step 583 เป๊ะ) ทำให้ Route ที่มี Tag 90 (มาจากฝั่ง EIGRP ผ่าน
+DIST-SW3 อยู่แล้ว) วิ่งวนกลับเข้า EIGRP อีกรอบผ่าน DIST-SW4 สร้าง Flap และภาระ CPU เพิ่ม
 
 ### สรุป Root Cause ทั้ง 2 จุด
 
