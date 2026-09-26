@@ -40,21 +40,21 @@ Lab scenario, และคำถามทวนความเข้าใจพ
 | 8 | 71–80 | [part-008-ipv6-fundamentals.md](docs/part-008-ipv6-fundamentals.md) | IPv6 Fundamentals | ✅ |
 | 9 | 81–90 | [part-009-static-routing.md](docs/part-009-static-routing.md) | Static Routing | ✅ |
 | 10 | 91–100 | [part-010-inter-vlan-routing.md](docs/part-010-inter-vlan-routing.md) | Inter-VLAN Routing (RoaS, SVI) | ✅ |
-| 11 | 101–110 | part-011-ospfv2-fundamentals.md | OSPFv2 Fundamentals | ⏳ |
-| 12 | 111–120 | part-012-ospfv2-advanced.md | OSPFv2 Advanced (Areas, LSA, Auth) | ⏳ |
-| 13 | 121–130 | part-013-eigrp-fundamentals.md | EIGRP Fundamentals | ⏳ |
-| 14 | 131–140 | part-014-access-control-lists.md | Standard/Extended ACL | ⏳ |
-| 15 | 141–150 | part-015-nat-pat.md | NAT / PAT | ⏳ |
-| 16 | 151–160 | part-016-dhcp-dns.md | DHCP & DNS Services | ⏳ |
-| 17 | 161–170 | part-017-ntp-syslog-snmp.md | NTP, Syslog, SNMP | ⏳ |
-| 18 | 171–180 | part-018-fhrp.md | HSRP / VRRP / GLBP | ⏳ |
-| 19 | 181–190 | part-019-wan-technologies.md | PPP, MPLS Intro, VPN Intro | ⏳ |
-| 20 | 191–200 | part-020-wireless-fundamentals.md | Wireless LAN Fundamentals (WLC/AP) | ⏳ |
-| 21 | 201–210 | part-021-switch-security.md | Port Security, DHCP Snooping, DAI | ⏳ |
-| 22 | 211–220 | part-022-aaa-device-hardening.md | AAA & Device Hardening | ⏳ |
-| 23 | 221–230 | part-023-automation-basics.md | NETCONF/RESTCONF/Ansible เบื้องต้น | ⏳ |
-| 24 | 231–240 | part-024-qos-fundamentals.md | QoS Fundamentals | ⏳ |
-| 25 | 241–250 | part-025-ccna-capstone-lab.md | CCNA Capstone Lab & Exam Prep | ⏳ |
+| 11 | 101–110 | [part-011-ospfv2-fundamentals.md](docs/part-011-ospfv2-fundamentals.md) | OSPFv2 Fundamentals | ✅ |
+| 12 | 111–120 | [part-012-ospfv2-advanced.md](docs/part-012-ospfv2-advanced.md) | OSPFv2 Advanced (Areas, LSA, Auth) | ✅ |
+| 13 | 121–130 | [part-013-eigrp-fundamentals.md](docs/part-013-eigrp-fundamentals.md) | EIGRP Fundamentals | ✅ |
+| 14 | 131–140 | [part-014-access-control-lists.md](docs/part-014-access-control-lists.md) | Standard/Extended ACL | ✅ |
+| 15 | 141–150 | [part-015-nat-pat.md](docs/part-015-nat-pat.md) | NAT / PAT | ✅ |
+| 16 | 151–160 | [part-016-dhcp-dns.md](docs/part-016-dhcp-dns.md) | DHCP & DNS Services | ✅ |
+| 17 | 161–170 | [part-017-ntp-syslog-snmp.md](docs/part-017-ntp-syslog-snmp.md) | NTP, Syslog, SNMP | ✅ |
+| 18 | 171–180 | [part-018-fhrp.md](docs/part-018-fhrp.md) | HSRP / VRRP / GLBP | ✅ |
+| 19 | 181–190 | [part-019-wan-technologies.md](docs/part-019-wan-technologies.md) | PPP, MPLS Intro, VPN Intro | ✅ |
+| 20 | 191–200 | [part-020-wireless-fundamentals.md](docs/part-020-wireless-fundamentals.md) | Wireless LAN Fundamentals (WLC/AP) | ✅ |
+| 21 | 201–210 | [part-021-switch-security.md](docs/part-021-switch-security.md) | Port Security, DHCP Snooping, DAI | ✅ |
+| 22 | 211–220 | [part-022-aaa-device-hardening.md](docs/part-022-aaa-device-hardening.md) | AAA & Device Hardening | ✅ |
+| 23 | 221–230 | [part-023-automation-basics.md](docs/part-023-automation-basics.md) | NETCONF/RESTCONF/Ansible เบื้องต้น | ✅ |
+| 24 | 231–240 | [part-024-qos-fundamentals.md](docs/part-024-qos-fundamentals.md) | QoS Fundamentals | ✅ |
+| 25 | 241–250 | [part-025-ccna-capstone-lab.md](docs/part-025-ccna-capstone-lab.md) | CCNA Capstone Lab & Exam Prep | ✅ |
 
 ### ระดับ CCNP ENCOR (Part 26–55)
 
