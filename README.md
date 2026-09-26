@@ -12,6 +12,9 @@ Lab scenario, และคำถามทวนความเข้าใจพ
 > จนครบ 100 Part (1000 Step) ดูตาราง roadmap ด้านล่างเพื่อดูสถานะความคืบหน้าล่าสุด
 > (✅ = เขียนแล้ว, ⏳ = กำลังจะเขียนต่อไป)
 
+> **เอกสารอ้างอิงกลาง**: [docs/00-ip-address-plan.md](docs/00-ip-address-plan.md) — IP Address Plan,
+> Loopback0, Transit Link, Device Platform ที่ใช้อ้างอิงสอดคล้องกันตั้งแต่ Part 11 เป็นต้นไป
+
 ## โครงสร้างหลักสูตร
 
 | ระดับ | Part | Step | หัวข้อหลัก |
