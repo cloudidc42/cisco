@@ -59,24 +59,11 @@ Database ต้อง Index ทุก Tag/Field (Step 795), ยังไม่�
 ### ปัญหาที่เกิดขึ้นเมื่อ Collector เดียวรับตรงจากทุกอุปกรณ์
 
 ```
-Design แบบ Part 54 (Single Collector) ขยายตรงๆ ไปที่ 500 อุปกรณ์ — ปัญหาที่ตามมา
-
-┌──────────┐          ┌──────────┐          ┌──────────┐
-│ Device 1 │─┐        │ Device 2 │─┐        │Device 500│─┐
-└──────────┘ │        └──────────┘ │        └──────────┘ │
-             │  gRPC Dial-out       │                     │
-             ▼  (500 Connection     ▼                     ▼
-      ┌─────────────────────────────────────────────────────┐
-      │           Telegraf ตัวเดียว (single process)          │
-      │  - รับ gRPC Connection 500 เส้นพร้อมกัน                │
-      │  - Decode encode-kvgpb ทุก Message (CPU-bound)        │
-      │  - เขียนตรงเข้า InfluxDB ทุก Batch (Blocking I/O)      │
-      └─────────────────────────────────────────────────────┘
-                              │
-                              ▼ ถ้า InfluxDB ช้าลงชั่วขณะ (Compaction, Disk I/O spike)
-                    Telegraf Buffer เต็ม → เริ่ม Drop Metric
-                    หรือ Backpressure ไหลกลับไปที่ gRPC Connection
-                    → Device บางตัว Disconnect ตอน Buffer เต็ม
+Design แบบ Part 54 ขยายตรงๆ ไปที่ 500 อุปกรณ์: Device 1..500 ──gRPC Dial-out (500 Connection)──►
+Telegraf ตัวเดียว (single process: รับ Connection 500 เส้น + Decode encode-kvgpb ทุก Message
+CPU-bound + เขียนตรงเข้า InfluxDB ทุก Batch แบบ Blocking I/O) ──► ถ้า InfluxDB ช้าลงชั่วขณะ
+(Compaction, Disk I/O spike) Telegraf Buffer เต็ม → เริ่ม Drop Metric หรือ Backpressure ไหลกลับ
+ไปที่ gRPC Connection → Device บางตัว Disconnect ตอน Buffer เต็ม
 ```
 
 ปัญหาหลักคือ **Collector กับ Storage ถูก Couple กันแน่นเกินไป**: ถ้า InfluxDB ช้าลงแม้ชั่วขณะ
@@ -92,23 +79,13 @@ Telemetry (เห็นข้อมูลครบ ไม่พลาด Micro-b
 ข้อมูล (Persist)** ทำให้ทั้งสองฝั่งขยายสเกลและ Fail ได้อย่างอิสระจากกัน
 
 ```
-Architecture ที่ Scale ได้จริง (Enterprise/SP-grade)
+Architecture ที่ Scale ได้จริง (Enterprise/SP-grade):
 
-┌──────────┐  gRPC Dial-out   ┌─────────────────┐   produce   ┌─────────────┐
-│ 500       │ ──────────────► │ Telegraf ×N       │ ──────────► │             │
-│ Devices   │  (Load-balance   │ (Collector Tier,  │  (topic:    │   KAFKA     │
-│           │   ผ่าน VIP/DNS   │  stateless, scale  │  telemetry. │  (3+ Broker,│
-│           │   Round-robin)   │  horizontally)      │  raw)       │  Replicated,│
-└──────────┘                  └─────────────────┘             │  Durable)    │
-                                                                └──────┬──────┘
-                                                       consume         │  consume
-                                              ┌────────────────────────┴────┐
-                                              ▼                              ▼
-                                     ┌──────────────────┐          ┌──────────────────┐
-                                     │ Telegraf/Consumer  │          │ Anomaly Detector   │
-                                     │ → InfluxDB          │          │ Stream (Step 797)  │
-                                     │ (Storage Tier)       │          │ → Trigger CI/CD    │
-                                     └──────────────────┘          └──────────────────┘
+500 Devices ──gRPC Dial-out (Load-balance ผ่าน VIP/DNS Round-robin)──► Telegraf ×N
+(Collector Tier, stateless, scale horizontally) ──produce (topic: telemetry.raw)──► KAFKA
+(3+ Broker, Replicated, Durable)
+    ├─ consume ─► Telegraf/Consumer → InfluxDB (Storage Tier, Step 795)
+    └─ consume ─► Anomaly Detector Stream (Step 797) → Trigger CI/CD
 ```
 
 | ประโยชน์ของ Kafka Layer | รายละเอียด |
@@ -143,21 +120,15 @@ Enterprise: **Collector ต้องรู้จัก "ที่อยู่" �
 
 ### ปัญหาของ Dial-in ที่ Scale — Collector ต้องดูแล "Inventory" ของทุกอุปกรณ์
 
-```
-Dial-in ที่ 500 อุปกรณ์ — Collector ต้องรู้ Address ของทุกตัวและ "ไปเชื่อมต่อเอง"
-
-┌─────────────────────────────────────────────────────────┐
-│  Collector ต้องมี Inventory File/Database:                 │
-│  device_list = [                                            │
-│    {"host": "10.255.10.2", "port": 830, ...},   # DIST-SW1  │
-│    {"host": "10.255.20.2", "port": 830, ...},   # DIST-SW2  │
-│    ... × 500 รายการ                                          │
-│  ]                                                            │
-│  → ทุกครั้งที่มีอุปกรณ์ใหม่เข้าเครือข่าย ต้องแก้ไข List นี้      │
-│  → ทุกครั้งที่ IP อุปกรณ์เปลี่ยน (DHCP Renew, Re-IP) ต้อง Sync  │
-│  → Collector ต้องเปิด Outbound Connection ไปยัง 500 ปลายทาง   │
-│    พร้อมกัน (Connection Pool Management ฝั่ง Collector หนักขึ้น)│
-└─────────────────────────────────────────────────────────┘
+```python
+# Dial-in ที่ 500 อุปกรณ์ — Collector ต้องรู้ Address ของทุกตัวและ "ไปเชื่อมต่อเอง"
+device_list = [
+    {"host": "10.255.10.2", "port": 830, ...},   # DIST-SW1
+    {"host": "10.255.20.2", "port": 830, ...},   # DIST-SW2
+    # ... × 500 รายการ ที่ Collector ต้องดูแลเป็น Inventory File/Database
+]
+# → อุปกรณ์ใหม่เข้าเครือข่าย ต้องแก้ List นี้ / IP เปลี่ยน (DHCP Renew, Re-IP) ต้อง Sync
+# → Collector ต้องเปิด Outbound Connection ไปยัง 500 ปลายทางพร้อมกัน (Connection Pool หนักขึ้น)
 ```
 
 | ปัญหาของ Dial-in ที่ Scale | ผลกระทบ |
@@ -237,9 +208,7 @@ Telegraf ใน Production Step นี้คือ Step ที่ทำตาม
   precision = "1ms"
   hostname = "noc-srv-collector-01"
 
-# ------------------------------------------------------------------
 # INPUT 1: Cisco Native MDT (ตาม Part 54 Step 534 ที่ Config ไว้บนอุปกรณ์)
-# ------------------------------------------------------------------
 [[inputs.cisco_telemetry_mdt]]
   transport = "grpc"
   service_address = ":57500"
@@ -251,17 +220,13 @@ Telegraf ใน Production Step นี้คือ Step ที่ทำตาม
   # tls_key  = "/etc/telegraf/certs/collector.key"
   # tls_allowed_cacerts = ["/etc/telegraf/certs/ca.pem"]
 
-# ------------------------------------------------------------------
 # INPUT 2: gNMI Dial-out (Step 794) — สำหรับอุปกรณ์/Vendor ที่ใช้ gNMI แทน MDT
-# ------------------------------------------------------------------
 [[inputs.cisco_telemetry_gnmi]]
   transport = "grpc"
   service_address = ":57501"
   max_msg_size = 4000000
 
-# ------------------------------------------------------------------
 # PROCESSOR: แปลง Tag ให้อ่านง่าย + Drop Field ที่ไม่จำเป็น (ลด Data Volume ตาม Step 791)
-# ------------------------------------------------------------------
 [[processors.rename]]
   [[processors.rename.replace]]
     tag = "source"
@@ -271,9 +236,7 @@ Telegraf ใน Production Step นี้คือ Step ที่ทำตาม
   [[processors.strings.trim]]
     tag = "path"
 
-# ------------------------------------------------------------------
-# OUTPUT 1: Kafka (Step 791) — ไม่เขียน InfluxDB ตรง แต่ส่งเข้า Kafka Topic ก่อน
-# ------------------------------------------------------------------
+# OUTPUT: Kafka (Step 791) — ไม่เขียน InfluxDB ตรง แต่ส่งเข้า Kafka Topic ก่อน
 [[outputs.kafka]]
   brokers = ["kafka-01:9092", "kafka-02:9092", "kafka-03:9092"]
   topic = "telemetry.raw"
@@ -331,17 +294,13 @@ Telegraf ใน Production Step นี้คือ Step ที่ทำตาม
 ### gNMI คืออะไร และต่างจาก MDT อย่างไร
 
 **gNMI (gRPC Network Management Interface)** คือ Protocol ที่พัฒนาโดย **OpenConfig Working
-Group** (กลุ่มที่ Google, และ Operator รายใหญ่หลายเจ้าร่วมกันผลักดัน) บนพื้นฐาน gRPC เดียวกับที่
-[Part 54 Step 533](part-054-network-assurance-telemetry.md) สอนไว้ — ความต่างหลักคือ **MDT เป็น
-ของ Cisco เอง** (แม้จะใช้ YANG Model มาตรฐานได้) ในขณะที่ **gNMI ถูกออกแบบมาให้ Vendor ไหนก็ได้
-Implement ตาม Spec เดียวกัน** ทำให้ Client/Collector ตัวเดียวคุยกับ Cisco, Juniper, Arista หรือ
-Vendor อื่นได้ด้วย Code เดียวกัน
-
-ต่างจาก MDT ที่ใช้ RPC เฉพาะของ Cisco (`MdtDialout`) และ Encoding แบบ `encode-kvgpb`
-(Cisco-specific KV format) — gNMI ใช้ RPC มาตรฐาน `Subscribe`/`Get`/`Set` กับ Encoding
-JSON_IETF/Protobuf ตาม Spec เดียวกันทุก Vendor ทำให้ MDT "ใช้ได้กับ Cisco เท่านั้น" (แม้ YANG
-Model จะมาตรฐานแต่ RPC/Encoding เป็นของ Cisco) ในขณะที่ gNMI Client เดียวกันใช้ได้ทั้ง Cisco,
-Juniper, Arista ด้วย Code เดียวกันเลย
+Group** (กลุ่มที่ Google และ Operator รายใหญ่หลายเจ้าร่วมกันผลักดัน) บนพื้นฐาน gRPC เดียวกับที่
+[Part 54 Step 533](part-054-network-assurance-telemetry.md) สอนไว้ — ต่างจาก MDT ที่ใช้ RPC
+เฉพาะของ Cisco (`MdtDialout`) และ Encoding แบบ `encode-kvgpb` (Cisco-specific KV format) gNMI
+ใช้ RPC มาตรฐาน `Subscribe`/`Get`/`Set` กับ Encoding JSON_IETF/Protobuf ตาม Spec เดียวกันทุก
+Vendor ทำให้ MDT "ใช้ได้กับ Cisco เท่านั้น" (แม้ YANG Model จะมาตรฐานแต่ RPC/Encoding เป็นของ
+Cisco) ในขณะที่ Client/Collector ตัวเดียวที่ใช้ gNMI คุยกับ Cisco, Juniper, Arista ด้วย Code
+เดียวกันได้เลย
 
 ### สาม RPC หลักของ gNMI
 
@@ -369,12 +328,9 @@ pip install pygnmi
 
 ```python
 #!/usr/bin/env python3
-"""
-gnmi_subscribe_client.py
-gNMI Subscribe Client (Dial-in Mode ตาม Step 792 — ใช้สำหรับ Ad-hoc Deep-dive)
-เชื่อมต่อไปยัง DIST-SW1 โดยตรงเพื่อ Subscribe Interface Counter แบบ SAMPLE ทุก 10 วินาที
-ใช้ Library pygnmi ที่ Wrap gNMI Protobuf Stub ให้ใช้งานง่ายกว่าเขียน grpc stub เอง
-"""
+# gnmi_subscribe_client.py — gNMI Subscribe Client (Dial-in Mode ตาม Step 792, Ad-hoc Deep-dive)
+# เชื่อมต่อไปยัง DIST-SW1 โดยตรงเพื่อ Subscribe Interface Counter แบบ SAMPLE ทุก 10 วินาที ผ่าน
+# Library pygnmi ที่ Wrap gNMI Protobuf Stub ให้ใช้งานง่ายกว่าเขียน grpc stub เอง
 
 from pygnmi.client import gNMIclient
 
@@ -603,16 +559,6 @@ groups:
           summary: "Interface {{ $labels.interface }} on {{ $labels.device }} มี Error Rate สูงผิดปกติ"
           description: "Error rate = {{ $value | printf \"%.2f\" }}/s เกิน Threshold 1/s ต่อเนื่อง 2 นาที"
 
-      - alert: OSPFNeighborCountDropped
-        expr: ospf_neighbor_count < ospf_neighbor_count_baseline
-        for: 30s
-        labels:
-          severity: critical
-          domain: routing
-        annotations:
-          summary: "OSPF Neighbor Count บน {{ $labels.device }} ลดลงจาก Baseline"
-          description: "ปัจจุบัน {{ $value }} neighbor — เสี่ยงสูญเสีย Redundancy (ดู Part 54 Step 538 Metric #1)"
-
   - name: bgp-health
     rules:
       - alert: BGPSessionFlapping
@@ -648,19 +594,18 @@ global:
 
 route:
   receiver: "default-slack"
-  group_by: ["domain", "device"]     # จัดกลุ่ม Alert ตาม domain+device — ปัญหา Link เดียวกัน
-                                       # ที่สร้าง 50 Alert (interface, OSPF, BGP ที่เกี่ยวข้อง)
-                                       # จะถูกส่งเป็น "1 Notification" ที่รวม Alert ทั้งหมดไว้
-  group_wait: 30s                     # รอ 30s ให้ Alert ที่เกี่ยวข้องมาถึงก่อนส่งรวมกัน
-  group_interval: 5m                  # ถ้ามี Alert ใหม่ในกลุ่มเดิม รอ 5 นาทีก่อนส่งรอบถัดไป
+  group_by: ["domain", "device"]     # จัดกลุ่ม Alert ตาม domain+device — Alert 50 ตัวจาก Link
+                                       # เดียวกันรวมเป็น "1 Notification"
+  group_wait: 30s                     # รอ Alert ที่เกี่ยวข้องมาถึงก่อนส่งรวมกัน
+  group_interval: 5m                  # Alert ใหม่ในกลุ่มเดิม รอ 5 นาทีก่อนส่งรอบถัดไป
   repeat_interval: 4h                 # Alert เดิมที่ยัง Active ส่งซ้ำทุก 4 ชั่วโมง (ไม่ Spam)
 
   routes:
     - match:
         severity: critical
         domain: automation
-      receiver: "cicd-webhook"        # Anomaly ที่เชื่อมกับ Deployment → Route ตรงไป Automated
-      continue: true                   # Remediation (Step 797) — และยังส่ง Alert แจ้ง Human ด้วย
+      receiver: "cicd-webhook"        # Route ตรงไป Automated Remediation (Step 797)
+      continue: true                   # และยังส่ง Alert แจ้ง Human ด้วย (ดู routes ถัดไป)
 
     - match:
         severity: critical
@@ -738,11 +683,8 @@ CI/CD (Part 79) Deploy Config → บันทึก Deployment Timestamp เป
 
 ```python
 #!/usr/bin/env python3
-"""
-record_deployment_event.py
-เรียกจาก CI/CD Pipeline (Part 79) ทันทีหลัง Deploy Config สำเร็จบนอุปกรณ์ใดๆ
-เขียน Event ลง InfluxDB เพื่อให้ Prometheus Alert Rule ของ Step 796 Correlate ได้
-"""
+# record_deployment_event.py — เรียกจาก CI/CD Pipeline (Part 79) ทันทีหลัง Deploy Config สำเร็จ
+# บนอุปกรณ์ใดๆ เขียน Event ลง InfluxDB เพื่อให้ Prometheus Alert Rule ของ Step 796 Correlate ได้
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -786,12 +728,9 @@ if __name__ == "__main__":
 
 ```python
 #!/usr/bin/env python3
-"""
-cicd_gateway_webhook.py
-Flask App รอรับ Webhook จาก Alertmanager (Step 796, receiver "cicd-webhook")
-ตรวจสอบว่า Anomaly สัมพันธ์กับ Deployment ล่าสุดจริงหรือไม่ ก่อนสั่ง Rollback ผ่าน
-Part 79 CI/CD Pipeline API — ทำหน้าที่เป็น "สมองกลาง" ของ Closed-loop Remediation
-"""
+# cicd_gateway_webhook.py — Flask App รอรับ Webhook จาก Alertmanager (Step 796, receiver
+# "cicd-webhook") ตรวจสอบว่า Anomaly สัมพันธ์กับ Deployment ล่าสุดจริงหรือไม่ ก่อนสั่ง Rollback
+# ผ่าน Part 79 CI/CD Pipeline API — ทำหน้าที่เป็น "สมองกลาง" ของ Closed-loop Remediation
 
 from flask import Flask, request, jsonify
 import requests
@@ -902,37 +841,17 @@ Dashboard แยกทีละตัว
 {
   "title": "Cross-domain Incident Correlation — WAN Edge Health",
   "panels": [
-    {
-      "title": "BGP Prefix Count (WAN-EDGE-1 ↔ ISP-RTR)",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "targets": [
-        { "query": "SELECT last(\"prefix_count\") FROM bgp_session WHERE peer='203.0.113.1' GROUP BY time(30s)" }
-      ]
-    },
-    {
-      "title": "QoS Queue Drop Rate (WAN-EDGE-1 Egress)",
-      "type": "timeseries",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "targets": [
-        { "query": "SELECT rate(\"drop_packets\") FROM qos_queue_stats WHERE device='WAN-EDGE-1' GROUP BY time(30s), queue_class" }
-      ]
-    },
-    {
-      "title": "Interface Utilization + Error (WAN Uplink)",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
-      "targets": [
-        { "query": "SELECT mean(\"utilization_pct\") FROM interface_stats WHERE device='WAN-EDGE-1' AND interface='Gi0/0/0' GROUP BY time(30s)" }
-      ]
-    }
+    { "title": "BGP Prefix Count (WAN-EDGE-1 ↔ ISP-RTR)", "type": "timeseries",
+      "targets": [{ "query": "SELECT last(\"prefix_count\") FROM bgp_session WHERE peer='203.0.113.1' GROUP BY time(30s)" }] },
+    { "title": "QoS Queue Drop Rate (WAN-EDGE-1 Egress)", "type": "timeseries",
+      "targets": [{ "query": "SELECT rate(\"drop_packets\") FROM qos_queue_stats WHERE device='WAN-EDGE-1' GROUP BY time(30s), queue_class" }] },
+    { "title": "Interface Utilization + Error (WAN Uplink)", "type": "timeseries",
+      "targets": [{ "query": "SELECT mean(\"utilization_pct\") FROM interface_stats WHERE device='WAN-EDGE-1' AND interface='Gi0/0/0' GROUP BY time(30s)" }] }
   ],
-  "annotations": {
-    "list": [
-      { "datasource": "influxdb-syslog", "name": "BGP/OSPF Events", "iconColor": "red" },
-      { "datasource": "influxdb-deployment", "name": "CI/CD Deployment Events (Part 79)", "iconColor": "blue" }
-    ]
-  }
+  "annotations": { "list": [
+    { "datasource": "influxdb-syslog", "name": "BGP/OSPF Events", "iconColor": "red" },
+    { "datasource": "influxdb-deployment", "name": "CI/CD Deployment Events (Part 79)", "iconColor": "blue" }
+  ] }
 }
 ```
 
@@ -973,13 +892,9 @@ Production Config โดยตรง** — ถ้า Attacker ปลอม Alert
 
 ### สามชั้นที่ต้อง Secure
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  ชั้นที่ 1: Device → Collector (gRPC/gNMI)                             │
-│  ชั้นที่ 2: Collector → Kafka → Storage (ภายใน Data Center)             │
-│  ชั้นที่ 3: Alertmanager → CI/CD Webhook (Step 797 — สิทธิ์สูงสุด)        │
-└─────────────────────────────────────────────────────────────────────┘
-```
+**ชั้นที่ 1**: Device → Collector (gRPC/gNMI) — **ชั้นที่ 2**: Collector → Kafka → Storage
+(ภายใน Data Center) — **ชั้นที่ 3**: Alertmanager → CI/CD Webhook (Step 797, สิทธิ์สูงสุด
+เพราะสั่งเปลี่ยน Production Config ได้ตรง)
 
 ### ชั้นที่ 1: TLS + Mutual Authentication บน gRPC Dial-out
 
@@ -992,11 +907,10 @@ Production Config โดยตรง** — ถ้า Attacker ปลอม Alert
 CORE-SW1(config)# telemetry ietf destination-group DG-NOC-COLLECTOR
 CORE-SW1(config-telemetry-dest-grp)# destination-id 1
 CORE-SW1(config-telemetry-dest-grp)# destination ip address 10.10.99.50 port 57500 protocol grpc-tls encoding encode-kvgpb
+CORE-SW1(config-telemetry-dest-grp)# destination profile telemetry-tls-profile
 CORE-SW1(config-telemetry-dest-grp)# exit
 
 ! ผูก Trustpoint ที่ออกจาก Enterprise CA (เดียวกับ Part 78 Unified PKI)
-CORE-SW1(config)# telemetry ietf destination-group DG-NOC-COLLECTOR
-CORE-SW1(config-telemetry-dest-grp)# destination profile telemetry-tls-profile
 CORE-SW1(config)# telemetry profile telemetry-tls-profile
 CORE-SW1(config-telemetry-profile)# trustpoint TP-TELEMETRY-CLIENT
 ```
@@ -1230,8 +1144,7 @@ $ docker compose logs telegraf-collector | grep -i "accepted"
 2026-09-26T15:00:04Z I! [inputs.cisco_telemetry_mdt] Accepted Cisco MDT GRPC dialout connection from 10.255.10.2 (DIST-SW1)
 2026-09-26T15:00:05Z I! [inputs.cisco_telemetry_gnmi] gNMI Subscribe established from 10.255.10.2:57501  (DIST-SW1 gNMI)
 2026-09-26T15:00:05Z I! [inputs.cisco_telemetry_mdt] Accepted Cisco MDT GRPC dialout connection from 10.255.20.2 (DIST-SW2)
-2026-09-26T15:00:06Z I! [inputs.cisco_telemetry_mdt] Accepted Cisco MDT GRPC dialout connection from 10.255.30.2 (DIST-SW3)
-2026-09-26T15:00:06Z I! [inputs.cisco_telemetry_mdt] Accepted Cisco MDT GRPC dialout connection from 10.255.40.2 (DIST-SW4)
+... (DIST-SW3, DIST-SW4 เชื่อมสำเร็จเช่นเดียวกัน รวมครบ 6/6 อุปกรณ์)
 
 $ curl -s http://localhost:9090/api/v1/targets | jq '.data.activeTargets[].health'
 "up"
