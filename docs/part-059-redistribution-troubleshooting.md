@@ -121,26 +121,15 @@ EIGRP-R1# show ip route | include 10.10
 ! Step 1: ยืนยันว่าฝั่ง Source (OSPF) มี Route จริง
 DIST-SW3# show ip route ospf | include 10.10.10.0
 O    10.10.10.0/24 [110/11] via 10.255.30.1, ...
-```
 
-ยืนยันว่า OSPF ฝั่ง Source มี Route แน่นอน → ปัญหาต้องอยู่ที่ตัว Redistribution เท่านั้น
-(ตาม Flowchart Step 581 ข้อ 2)
-
-```
-! Step 2: ตรวจสอบ show ip protocols ฝั่ง EIGRP
+! Step 2: OSPF มี Route จริง -> ตรวจ show ip protocols ฝั่ง EIGRP
 DIST-SW3# show ip protocols
 Routing Protocol is "eigrp EIGRP-DEMO"
-  ...
   Redistributing: eigrp EIGRP-DEMO
     Redistributing External Routes from,
       ospf 1 (route-map OSPF-TO-EIGRP)
-```
 
-บรรทัดนี้ยืนยันว่า Redistribute **ถูก Config ไว้จริง** และ Route-map ก็ผูกถูกตัว — แต่
-**ไม่มีบรรทัดใดบอกค่า Metric ที่ใช้เลย** ต้องเจาะไปดู Running-config ตรงๆ:
-
-```
-! Step 3: เจาะดู Running-config ส่วน redistribute โดยตรง
+! Statement มีอยู่จริงแต่ไม่มีบรรทัดบอก Metric -> เจาะ Running-config โดยตรง
 DIST-SW3# show run | section router eigrp
 router eigrp EIGRP-DEMO
  address-family ipv4 unicast autonomous-system 100
@@ -479,12 +468,8 @@ O*E1 0.0.0.0/0 [110/1] via 10.10.254.1, 00:05:44, GigabitEthernet1/0/1
 DIST-SW3# show ip route eigrp | include 10.199.20
 D    10.199.201.0/24 [90/156160] via 10.199.34.9, 00:10:02, GigabitEthernet1/0/23
 D    10.199.200.0/24 [90/156160] via 10.199.34.9, 00:10:02, GigabitEthernet1/0/23
-```
 
-มีทั้งคู่ฝั่ง Source แน่นอน → ปัญหาอยู่ที่ Filter ของ Redistribution
-
-```
-! Step 2: ตรวจ Prefix-list ด้วย Detail เพื่อดู Hit Count ของแต่ละ Sequence
+! มีทั้งคู่ฝั่ง Source แน่นอน -> ปัญหาอยู่ที่ Filter -> ตรวจ Prefix-list ด้วย Detail
 DIST-SW3# show ip prefix-list detail LEGACY-SERVER
 ip prefix-list LEGACY-SERVER:
    count: 1, range entries: 1, sequences: 5 - 5, refcount: 2
@@ -581,13 +566,8 @@ Step 308 เตือนไว้ทุกประการ (SPF Recalculation 
 ! Step 1: ยืนยันจำนวน Prefix จริงในตาราง BGP ที่ WAN-EDGE-1
 WAN-EDGE-1# show ip bgp summary | include 65000
 203.0.113.1     4 65000   48210   48099  241890    0    0 1d02h      241855
-```
 
-Neighbor ISP ส่ง Prefix มา 241,855 เส้นจริง (จำลอง Partial Internet Feed) — ยืนยันว่า BGP Table
-มีขนาดใหญ่จริงตามที่คาด (ไม่ใช่ปัญหาฝั่ง BGP)
-
-```
-! Step 2: ตรวจ Redistribute Statement ที่ ASBR (WAN-EDGE-1)
+! Neighbor ISP ส่ง Prefix มาจริง 241,855 เส้น (ไม่ใช่ปัญหาฝั่ง BGP) -> ตรวจ Redistribute ที่ ASBR
 WAN-EDGE-1# show run | section router ospf
 router ospf 1
  router-id 1.1.1.21
@@ -809,18 +789,12 @@ Debug ยากเพราะไม่มี Error ใดๆ Config ก็ด�
 ! Step 1: ตรวจ show ip protocols เพื่อดูว่า Redistribute Source มีตัวไหนที่ไม่ควรมี
 DIST-SW3# show ip protocols
 Routing Protocol is "eigrp EIGRP-DEMO"
-  ...
   Redistributing: eigrp EIGRP-DEMO
     Redistributing External Routes from,
       ospf 1 (route-map OSPF-TO-EIGRP)
       static
-```
 
-**พบสิ่งผิดปกติทันที** — เห็นบรรทัด `static` โผล่มาเป็น Source ที่ 2 ทั้งที่ Design เดิมของ Lab
-(Part 31) ไม่มี `redistribute static` ใดๆ ใต้ `router eigrp` เลย
-
-```
-! Step 2: เจาะ Running-config ดูว่า Seed Metric มาจากไหน
+! พบ static โผล่มาเป็น Source ที่ 2 (Design เดิมไม่มี) -> เจาะ Running-config ดูว่า Metric มาจากไหน
 DIST-SW3# show run | section router eigrp
 router eigrp EIGRP-DEMO
  address-family ipv4 unicast autonomous-system 100
@@ -925,13 +899,8 @@ Routing Protocol is "ospf 1"
 DIST-SW4# show ip protocols | begin ospf
 Routing Protocol is "ospf 1"
   ! -- ไม่มีบรรทัด "Redistributing External Routes from, eigrp 100" เลย --
-```
 
-**พบ Root Cause ทันที** — DIST-SW3 ยังมีบรรทัด Redistribute EIGRP→OSPF ปกติ แต่ DIST-SW4
-**ไม่มีเลย** ยืนยันว่าทิศทางนี้หายไปจากจุดเดียว (DIST-SW4) เท่านั้น
-
-```
-! Step 2: ยืนยันว่าทิศทางตรงข้าม (OSPF->EIGRP) ยังอยู่ปกติทั้งคู่ (อธิบายว่าทำไม Ping ยังผ่าน)
+! DIST-SW3 ยังมี Redistribute EIGRP->OSPF ปกติ แต่ DIST-SW4 ไม่มีเลย -> เช็คทิศตรงข้ามที่ DIST-SW4
 DIST-SW4# show ip protocols | begin eigrp
 Routing Protocol is "eigrp EIGRP-DEMO"
   Redistributing: eigrp EIGRP-DEMO
@@ -939,19 +908,15 @@ Routing Protocol is "eigrp EIGRP-DEMO"
       ospf 1 (route-map OSPF-TO-EIGRP)
 ```
 
-ยืนยันว่า OSPF→EIGRP (ทำให้ Legacy Site เห็น Campus) ยังทำงานอยู่ที่ DIST-SW4 — เท่ากับ
-**EIGRP-R2 ยังเห็น Campus ผ่าน DIST-SW4 ได้ปกติ (เพราะ Cost/AD ของ EIGRP มองว่า DIST-SW4 ใกล้
-กว่าจาก R2)** จึงเลือกออกทาง DIST-SW4 เสมอเมื่อ Legacy Site เป็นฝ่ายเริ่ม Traffic — แต่ Campus
-กลับไม่รู้จัก Legacy Site ผ่าน DIST-SW4 อีกต่อไป (เพราะทิศ EIGRP→OSPF ที่ DIST-SW4 ถูกปิด) จึง
-ต้องอ้อมไปใช้เส้นทางเดียวที่เหลือคือผ่าน DIST-SW3 เสมอเมื่อ Campus เป็นฝ่ายเริ่ม Traffic —
-เกิด Asymmetric Path ตามที่เห็น
-
-### ตารางสรุป Path แต่ละทิศทางก่อนแก้
+**พบ Root Cause ทันที** — ทิศ EIGRP→OSPF หายไปจาก DIST-SW4 จุดเดียว ในขณะที่ทิศ OSPF→EIGRP
+ที่จุดเดียวกันยังทำงานปกติ — ทำให้ EIGRP-R2 ยังเห็น Campus ผ่าน DIST-SW4 (Metric ใกล้กว่า) และ
+เลือกออกทางนั้นเสมอเมื่อ Legacy Site เริ่ม Traffic แต่ Campus ไม่รู้จัก Legacy Site ผ่าน DIST-SW4
+อีกต่อไป จึงต้องอ้อมไปใช้ DIST-SW3 เสมอเมื่อ Campus เป็นฝ่ายเริ่ม Traffic — เกิด Asymmetric Path
 
 | ทิศทาง Traffic | เส้นทางที่ใช้จริง | เหตุผล |
 |---|---|---|
-| Campus → Legacy | ผ่าน DIST-SW3 เท่านั้น | เป็น ASBR เดียวที่ยัง Redistribute OSPF→EIGRP ให้ Legacy Site เห็น Campus (ผิด แค่ที่ DIST-SW3) — รอ Campus จะรู้จัก Legacy Site จาก DIST-SW3 ผ่าน EIGRP→OSPF ที่ยังทำงานปกติที่นั่น |
-| Legacy → Campus | ผ่าน DIST-SW4 (ใกล้กว่าตาม EIGRP Metric จาก R2) | EIGRP-R2 ยังเห็น Campus (ผ่าน OSPF→EIGRP ที่ DIST-SW4 ยังทำงานอยู่) และเลือก DIST-SW4 เพราะ Metric ต่ำกว่า DIST-SW3 จาก Physical Topology |
+| Campus → Legacy | ผ่าน DIST-SW3 เท่านั้น | ASBR เดียวที่ยัง Redistribute OSPF→EIGRP ให้ Legacy Site เห็น Campus |
+| Legacy → Campus | ผ่าน DIST-SW4 (Metric ใกล้กว่าจาก R2) | EIGRP-R2 ยังเห็น Campus ผ่าน DIST-SW4 (ทิศ OSPF→EIGRP ยังทำงานอยู่) |
 
 ### Fix
 

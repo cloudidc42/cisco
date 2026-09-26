@@ -81,18 +81,7 @@ Down, `%OSPF-5-ADJCHG ... from FULL to DOWN`, Interface Flap, STP Topology Chang
 > ไหม" → "เวลาตรงไหม" → "เทียบกับตัวอื่นแล้วต่างกันที่ไหน"** — Checklist นี้จะถูกใช้ซ้ำในทุก
 > Scenario ของ Part นี้ เพื่อสร้างความเคยชินที่จะพาไปใช้ในข้อสอบ ENARSI จริงได้
 
-### 611.3 คำสั่ง "รู้ทันที" ประจำ Service แต่ละตัว (Quick-check Command)
-
-| Service | คำสั่งเดียวที่บอกสถานะได้เร็วที่สุด | ผลลัพธ์ที่ควรเห็นถ้าปกติ |
-|---|---|---|
-| DHCP (Client บน SVI) | `show ip dhcp binding` (ฝั่ง Relay/Server) | เห็น Client Binding ที่คาดหวังครบ |
-| DHCP (Relay) | `show ip interface vlan <n> \| include Helper` | เห็น Helper Address ที่ถูกต้อง |
-| NTP | `show ntp status` | `Clock is synchronized, stratum <n>` |
-| Syslog | `show logging \| include Trap logging\|Logging to` | `link up`, message count เพิ่มขึ้นเรื่อยๆ |
-| SNMP | `show snmp` + เทียบกับ NMS Polling Log | Counter `SNMP packets input` เพิ่มขึ้นตาม Poll Interval |
-| DNS (บน Router) | `show hosts` หรือลอง `ping <hostname>` | `Translating "<hostname>"...domain server (...) [OK]` |
-
-### 611.4 กฎเหล็กที่ใช้ตลอด Part นี้: "อย่าเชื่อว่าฝั่งส่งบอกว่าสำเร็จ = ปลายทางได้รับจริง"
+### 611.3 กฎเหล็กที่ใช้ตลอด Part นี้: "อย่าเชื่อว่าฝั่งส่งบอกว่าสำเร็จ = ปลายทางได้รับจริง"
 
 เพราะ DHCP Relay, Syslog, SNMP Trap ทั้งหมดวิ่งบน **UDP** (Connectionless, ไม่มี Acknowledgment
 ระดับ Transport) — คำสั่งอย่าง `show logging` ที่บอกว่า `Logging to 10.10.99.50 ... link up`
@@ -595,7 +584,7 @@ Extended IP access list MGMT-PLANE-ACL
 ```
 
 **อาการ**: WAN-EDGE-2 มองว่า Syslog ทำงานปกติทุกอย่าง — นี่คือกับดักที่อธิบายไว้ใน
-Step 611.4 พอดี:
+Step 611.3 พอดี:
 
 ```
 WAN-EDGE-2# show logging | include Trap logging|Logging to
@@ -1037,35 +1026,12 @@ Config ใดๆ เลย** — พิสูจน์ชัดเจนว่�
 Refused/Timeout"
 
 สองปัญหาดูไม่เกี่ยวข้องกันเลยในตอนแรก แต่วิศวกรที่รับ Ticket ใช้ Checklist จาก Step 611
-ไล่ทั้งสองปัญหาแบบเป็นระบบไปพร้อมกัน
+ไล่ทั้งสองปัญหาแบบเป็นระบบไปพร้อมกัน — **DIST-SW4** คือ Gateway ของ VLAN 65 (IOT-SENSORS,
+Ticket #1) ส่วน **DIST-SW3** คือจุดที่มี `time-range BUSINESS-HOURS` จาก Part 45 อยู่
+(Ticket #2) ทั้งสองตัวชี้ NTP ไปที่ NOC-SRV (`10.10.99.50`) และใช้ DHCP-DNS-SRV
+(`10.10.30.20`) เป็น Central Server ร่วมกัน
 
-### 620.2 Topology ของ Lab นี้
-
-```
-                         ┌───────────────────┐
-                         │     NOC-SRV         │  10.10.99.50
-                         │ NTP Stratum 2       │  (NTP/Syslog/SNMP Server)
-                         │ Syslog Collector    │
-                         └──────────┬─────────┘
-                                    │
-              ┌─────────────────────┼─────────────────────┐
-              │                     │                       │
-        ┌─────┴─────┐        ┌──────┴──────┐         ┌─────┴─────┐
-        │ DIST-SW3   │        │  DIST-SW4    │         │DHCP-DNS-  │
-        │ 1.1.1.13   │        │  1.1.1.14    │         │SRV .30.20 │
-        │            │        │              │         └───────────┘
-        │ time-range │        │ Vlan65       │
-        │ BUSINESS-  │        │ IOT-SENSORS  │
-        │ HOURS      │        │ 10.10.65.2   │  <-- ไม่มี ip helper-address (Ticket #1)
-        │ (Part 45)  │        │ (ไม่ได้อยู่ใน │
-        │            │        │  IP Plan หลัก)│
-        │ NTP Key    │        └──────────────┘
-        │ Mismatch   │
-        │ (Ticket #2)│
-        └────────────┘
-```
-
-### 620.3 ไล่ Ticket #1 — IoT Sensor ไม่ Online (Independent Issue)
+### 620.2 ไล่ Ticket #1 — IoT Sensor ไม่ Online (Independent Issue)
 
 **ชั้น 1 (Local Service Config) บน DIST-SW4**:
 
@@ -1095,7 +1061,7 @@ DIST-SW4# show ip interface vlan 65 | include Helper
 รอ 2-3 นาทีให้ Sensor Retry DHCP ตามรอบของตัวเอง — Sensor เริ่ม Online ทีละตัว **Ticket #1
 ปิดสำเร็จ** — เป็น Root Cause ที่ **ไม่เกี่ยวข้อง**กับ Ticket #2 เลย (Independent Issue ตัวแรก)
 
-### 620.4 ไล่ Ticket #2 — Contractor เข้า Server1 ไม่ได้ในเวลาทำการ
+### 620.3 ไล่ Ticket #2 — Contractor เข้า Server1 ไม่ได้ในเวลาทำการ
 
 **ทวนความจำ Config เดิมจาก [Part 45 Step 442](part-045-advanced-acl-zbfw.md)**:
 
@@ -1129,9 +1095,8 @@ Time source is user configuration
 
 **Clock ของ DIST-SW3 อ่านว่า "21:47 วันพฤหัสฯ ที่ 24 กันยายน"** ทั้งที่เวลาจริงคือ "เที่ยงวันจันทร์
 ที่ 28 กันยายน" — คลาดเคลื่อนไปเกือบ 4 วัน และ **`Time source is user configuration`** (ไม่ใช่
-NTP) ยืนยันว่า DIST-SW3 ไม่ได้ Sync มานานแล้ว จึง Free-run เพี้ยนไปเรื่อยๆ ตาม Internal Clock
-Drift ของ Hardware เอง (ที่วันเวลาดูสมเหตุสมผลใกล้เคียงของจริงเพราะ Drift สะสมแค่ไม่กี่วัน
-ไม่ใช่กลับไปปี 2019 แบบ Scenario 619 ที่เป็นการ Reset เต็มรูปแบบ)
+NTP) ยืนยันว่า DIST-SW3 ไม่ได้ Sync มานานแล้ว จึง Free-run เพี้ยนไปตาม Internal Clock Drift
+ของ Hardware เอง (Drift สะสมแค่ไม่กี่วัน ไม่ใช่ Reset เต็มรูปแบบแบบ Scenario 619)
 
 **ตรวจสาเหตุที่ NTP ไม่ Sync**:
 
@@ -1154,15 +1119,13 @@ ntp authenticate
 ntp server 10.10.99.50 key 1
 ```
 
-Config ดู "ครบ" ทุกบรรทัดตามที่ [Part 17 Step 163](part-017-ntp-syslog-snmp.md) กำหนด — แต่
-เพราะ Key String ถูก Encrypt แสดงเป็น Type 7 เสมอ ไม่สามารถเทียบด้วยตาได้ว่าตรงกับ NOC-SRV
-จริงหรือไม่ ต้องสอบถามทีม Security ที่เป็นผู้ Rotate Key ล่าสุด — ได้คำตอบว่า **DIST-SW3 ถูก
-ตกหล่นจาก Batch Script ที่ใช้ Rotate Key ทั่ว Lab เมื่อสัปดาห์ก่อน (Script รันไม่ครบทุกอุปกรณ์
-เพราะ SSH Session ไปยัง DIST-SW3 หลุดกลางทางตอนรัน แต่ไม่มีใครสังเกตเห็น Error นั้น)** —
-DIST-SW3 จึงยังใช้ Key String เก่า (`NtpAuthKey2026!`) ในขณะที่ NOC-SRV เปลี่ยนเป็น Key ใหม่
-ไปแล้วทั้งระบบ
+Config ดู "ครบ" ทุกบรรทัดตาม [Part 17 Step 163](part-017-ntp-syslog-snmp.md) — แต่ Key String
+ถูก Encrypt เป็น Type 7 เสมอ เทียบด้วยตาไม่ได้ ต้องสอบถามทีม Security ที่ Rotate Key ล่าสุด —
+ได้คำตอบว่า **DIST-SW3 ถูกตกหล่นจาก Batch Script Rotate Key ทั่ว Lab เมื่อสัปดาห์ก่อน** (SSH
+Session หลุดกลางทางตอนรัน แต่ไม่มีใครสังเกต Error) DIST-SW3 จึงยังใช้ Key เก่า
+(`NtpAuthKey2026!`) ในขณะที่ NOC-SRV เปลี่ยนเป็น Key ใหม่ไปแล้วทั้งระบบ
 
-### 620.5 Root Cause Chain แบบสมบูรณ์
+### 620.4 Root Cause Chain แบบสมบูรณ์
 
 ```
 Root Cause: Batch Script Rotate NTP Key ตกหล่น DIST-SW3
@@ -1192,7 +1155,7 @@ Root Cause: Batch Script Rotate NTP Key ตกหล่น DIST-SW3
 ลามไปทำให้ Security Policy (Time-based ACL จาก Part 45) ทำงานผิดพลาดโดยที่ไม่มีใครแก้ ACL
 เลยแม้แต่บรรทัดเดียว**
 
-### 620.6 การแก้ไขแบบสมบูรณ์
+### 620.5 การแก้ไขแบบสมบูรณ์
 
 ```
 DIST-SW3(config)# no ntp authentication-key 1 md5 NtpAuthKey2026!
@@ -1209,9 +1172,9 @@ DIST-SW3# show ntp status
 Clock is synchronized, stratum 3, reference is 10.10.99.50
 ```
 
-รอให้ NTP Algorithm ปรับ Clock แบบนุ่มนวลจนเสร็จสมบูรณ์ (ตามที่อธิบายไว้ใน
-[Part 17 Step 161](part-017-ntp-syslog-snmp.md) ว่า NTP ไม่กระโดดเวลาทันทีเพื่อป้องกัน
-Timestamp ย้อนกลับ) — ใช้เวลาประมาณ 10-15 นาทีสำหรับ Clock ที่คลาดเคลื่อนหลายวันแบบนี้:
+รอให้ NTP Algorithm ปรับ Clock แบบนุ่มนวลจนเสร็จ (ไม่กระโดดเวลาทันทีตาม
+[Part 17 Step 161](part-017-ntp-syslog-snmp.md)) — ใช้เวลาประมาณ 10-15 นาทีสำหรับ Clock ที่
+คลาดเคลื่อนหลายวันแบบนี้:
 
 ```
 DIST-SW3# show clock detail
@@ -1239,21 +1202,20 @@ Extended IP access list CONTRACTOR-TO-SERVER1
 Line 20 เริ่มมี Matches แล้ว — **Ticket #2 ปิดสำเร็จ** โดยที่ **ไม่ได้แก้ ACL แม้แต่บรรทัดเดียว**
 พิสูจน์ชัดเจนว่า Root Cause อยู่ที่ NTP Authentication เพียงจุดเดียวเท่านั้น
 
-### 620.7 ตารางสรุป Lab (Full RCA Report ส่งให้ผู้บริหาร)
+### 620.6 ตารางสรุป Lab (Full RCA Report ส่งให้ผู้บริหาร)
 
 | # | Ticket | Root Cause | จุดที่แก้ | อิสระจากปัญหาอื่นหรือ Cascade |
 |---|---|---|---|---|
 | 1 | IoT Sensor ไม่ Online | ไม่มี `ip helper-address` บน SVI Vlan65 (VLAN ใหม่) | DIST-SW4 | Independent — ไม่เกี่ยวกับปัญหาอื่น |
 | 2 | Contractor เข้า Server1 ไม่ได้ | NTP Key Mismatch (ตกหล่นจาก Batch Rotate Script) → Clock Drift → Time-range ผิด | DIST-SW3 | Cascade 3 ชั้น (NTP → Clock → ACL) |
 
-### 620.8 Action Item ป้องกันไม่ให้เกิดซ้ำ
+### 620.7 Action Item ป้องกันไม่ให้เกิดซ้ำ
 
 | Action | เหตุผล |
 |---|---|
-| เพิ่ม "ตรวจ `ip helper-address`" เข้า Checklist มาตรฐานการสร้าง VLAN ใหม่อย่างเป็นทางการ | ป้องกัน Scenario แบบ Step 612/620.3 ซ้ำ |
-| ให้ Batch Script Rotate Key มี Exit Code Check + Alert ถ้า SSH หลุดกลางทาง ไม่ใช่แค่ "รันจบ" เฉยๆ | ป้องกันการตกหล่นแบบเงียบๆ อีก |
-| ตั้ง SNMP Trap แจ้งเตือนทันทีที่ `show ntp status` เปลี่ยนเป็น `unsynchronized` เกิน 30 นาที | จับปัญหาได้ก่อนที่ Clock จะ Drift ไปมากจนกระทบ Feature อื่น |
-| Monitoring Dashboard ควรมี Widget "Clock Skew ต่ออุปกรณ์" แยกจาก "NTP Sync Status" | เพราะ Clock Skew คือผลลัพธ์ที่กระทบจริง ส่วน Sync Status เป็นแค่สาเหตุ |
+| เพิ่ม "ตรวจ `ip helper-address`" เข้า Checklist มาตรฐานการสร้าง VLAN ใหม่ | ป้องกัน Scenario แบบ 620.2 เกิดซ้ำ |
+| ให้ Batch Script Rotate Key มี Exit Code Check + Alert ถ้า SSH หลุดกลางทาง | ป้องกันการตกหล่นแบบเงียบๆ อีก |
+| ตั้ง SNMP Trap แจ้งเตือนทันทีที่ `show ntp status` เป็น `unsynchronized` เกิน 30 นาที | จับปัญหาก่อนที่ Clock จะ Drift มากจนกระทบ Feature อื่น |
 
 ---
 
