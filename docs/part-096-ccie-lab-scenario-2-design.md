@@ -661,6 +661,36 @@ Scenario ก่อนหน้าทั้งหมด — โจทย์นี
 8. **D8 (Legacy Constraint)**: Hub เดิมที่โฮจิมินห์ยังมีระบบ Multicast-based Video Conferencing รุ่น
    เก่าที่ใช้งานประจำวันในการประชุมข้ามภูมิภาค ต้องรักษาให้ทำงานต่อได้ในทุก Design ใหม่
 
+### ภาพรวม Topology ระดับสูง (High-level Design)
+
+```
+                         ┌───────────────────────────┐
+                         │   AWS (Region สิงคโปร์)     │ <-- D2: Tracking App
+                         │   Dual Direct Connect      │
+                         └───────────┬─────────────────┘
+                                     │ (Primary Cloud Gateway)
+                    ┌────────────────┴────────────────┐
+                    │        Hub: สิงคโปร์               │
+                    └───┬─────────────────────────┬────┘
+        MPLS L3VPN + BGP TE (D1)              MPLS L3VPN
+                    │                               │
+     ┌──────────────┴───────────┐      ┌────────────┴───────────┐
+     │   Hub: กรุงเทพฯ (HQ)       │      │   Hub: จาการ์ตา          │
+     │  ── VPN เดี่ยว ──► Azure    │      │  VRF-Lite แยก (D4)      │
+     │      (D3: HR/Finance)     │      │  ── Local In-country ──►│
+     └──────────────┬─────────────┘      │      Cloud Region       │
+                    │                    └──────────────────────────┘
+     ┌──────────────┴───────────┐
+     │   Hub: โฮจิมินห์            │
+     │  รักษา PIM-SM เดิม (D8)    │
+     └────────────────────────────┘
+
+     + 3 Regional Hub ใหม่ (D5/D6): Deploy ผ่าน Ansible/Git Pipeline
+       พร้อม Zero Trust Template ตั้งแต่วันแรก ไม่มี Transition Period
+
+     Telemetry (D7): YANG Push/gRPC จากทุก Hub → Dashboard กลาง (Real-time)
+```
+
 ### Model Design แบบสรุป
 
 **D1 — Backbone**: ใช้ **MPLS L3VPN เป็น Backbone หลัก** ระหว่าง 7 Hub (Part 86-87) เสริมด้วย
