@@ -8,9 +8,10 @@
 ประกอบด้วย: ทฤษฎี, IOS/IOS-XE config เต็มรูปแบบ, คำสั่ง verify/troubleshoot, ASCII topology,
 Lab scenario, และคำถามทวนความเข้าใจพร้อมเฉลย
 
-> **สถานะ:** โครงการนี้เป็นงานต่อเนื่องขนาดใหญ่ — เนื้อหาจะถูกเพิ่มเข้ามาเรื่อยๆ ทีละ Part
-> จนครบ 100 Part (1000 Step) ดูตาราง roadmap ด้านล่างเพื่อดูสถานะความคืบหน้าล่าสุด
-> (✅ = เขียนแล้ว, ⏳ = กำลังจะเขียนต่อไป)
+> **สถานะ: เขียนจบครบสมบูรณ์แล้ว — 100/100 Part (Step 1–1000) ✅**
+> หลักสูตรนี้ครอบคลุมตั้งแต่ CCNA (Part 1–25) → CCNP ENCOR (Part 26–55) → CCNP ENARSI
+> (Part 56–70) → CCIE Enterprise Infrastructure (Part 71–100) แบบต่อเนื่องเป็น Lab เดียวกัน
+> ตั้งแต่ต้นจนจบ รวมเนื้อหากว่า 108,000 บรรทัด ดูตาราง roadmap ด้านล่างสำหรับลิงก์ไปยังทุก Part
 
 > **เอกสารอ้างอิงกลาง**: [docs/00-ip-address-plan.md](docs/00-ip-address-plan.md) — IP Address Plan,
 > Loopback0, Transit Link, Device Platform ที่ใช้อ้างอิงสอดคล้องกันตั้งแต่ Part 11 เป็นต้นไป
@@ -115,36 +116,36 @@ Lab scenario, และคำถามทวนความเข้าใจพ
 
 | Part | Step | หัวข้อ | สถานะ |
 |---|---|---|---|
-| 71 | 701–710 | CCIE Lab Blueprint Overview | ⏳ |
-| 72 | 711–720 | Large Campus Fabric Design (L2) | ⏳ |
-| 73 | 721–730 | Large-Scale Routing Design (OSPF+BGP+EIGRP) | ⏳ |
-| 74 | 731–740 | Advanced BGP for Enterprise WAN Edge | ⏳ |
-| 75 | 741–750 | Advanced Multicast for Enterprise | ⏳ |
-| 76 | 751–760 | SD-WAN Advanced Design (Viptela Deep Dive) | ⏳ |
-| 77 | 761–770 | SD-Access Advanced Design & Deployment | ⏳ |
-| 78 | 771–780 | Security Integration (ISE, TrustSec, FTD, Umbrella) | ⏳ |
-| 79 | 781–790 | Full-Stack Automation (Python+Ansible+CI/CD) | ⏳ |
-| 80 | 791–800 | Model-Driven Telemetry & Streaming | ⏳ |
-| 81 | 801–810 | High Availability (NSF/SSO, ISSU) | ⏳ |
-| 82 | 811–820 | End-to-End Enterprise QoS Design | ⏳ |
-| 83 | 821–830 | Enterprise Multicast Deep Dive Advanced | ⏳ |
-| 84 | 831–840 | VXLAN/EVPN Fundamentals | ⏳ |
-| 85 | 841–850 | VXLAN/EVPN Multisite Advanced | ⏳ |
-| 86 | 851–860 | MPLS L3VPN Fundamentals | ⏳ |
-| 87 | 861–870 | MPLS L3VPN Advanced & WAN Integration | ⏳ |
-| 88 | 871–880 | IPv6 Enterprise Deployment Deep Dive | ⏳ |
-| 89 | 881–890 | Enterprise Wireless at Scale (High Density) | ⏳ |
-| 90 | 891–900 | Catalyst 9000 Advanced Features | ⏳ |
-| 91 | 901–910 | Advanced Troubleshooting Methodology | ⏳ |
-| 92 | 911–920 | Disaster Recovery & Network Resilience | ⏳ |
-| 93 | 921–930 | Cloud Connectivity (AWS/Azure/GCP, Cloud onRamp) | ⏳ |
-| 94 | 931–940 | Zero Trust Network Architecture | ⏳ |
-| 95 | 941–950 | CCIE Full Lab Scenario #1 (Diagnose Module) | ⏳ |
-| 96 | 951–960 | CCIE Full Lab Scenario #2 (Design Module) | ⏳ |
-| 97 | 961–970 | CCIE Full Lab Scenario #3 (Deploy Module) | ⏳ |
-| 98 | 971–980 | CCIE Full Lab Scenario #4 (Optimize Module) | ⏳ |
-| 99 | 981–990 | Capstone: Build Enterprise Network From Scratch | ⏳ |
-| 100 | 991–1000 | Career Mastery: Exam Strategy & Real-World Scenarios | ⏳ |
+| 71 | 701–710 | [part-071-ccie-lab-blueprint-overview.md](docs/part-071-ccie-lab-blueprint-overview.md) | CCIE Lab Blueprint Overview | ✅ |
+| 72 | 711–720 | [part-072-large-campus-fabric-design.md](docs/part-072-large-campus-fabric-design.md) | Large Campus Fabric Design (L2) | ✅ |
+| 73 | 721–730 | [part-073-large-scale-routing-design.md](docs/part-073-large-scale-routing-design.md) | Large-Scale Routing Design (OSPF+BGP+EIGRP) | ✅ |
+| 74 | 731–740 | [part-074-advanced-bgp-wan-edge.md](docs/part-074-advanced-bgp-wan-edge.md) | Advanced BGP for Enterprise WAN Edge | ✅ |
+| 75 | 741–750 | [part-075-advanced-multicast-enterprise.md](docs/part-075-advanced-multicast-enterprise.md) | Advanced Multicast for Enterprise | ✅ |
+| 76 | 751–760 | [part-076-sdwan-advanced-design.md](docs/part-076-sdwan-advanced-design.md) | SD-WAN Advanced Design (Viptela Deep Dive) | ✅ |
+| 77 | 761–770 | [part-077-sd-access-advanced-design.md](docs/part-077-sd-access-advanced-design.md) | SD-Access Advanced Design & Deployment | ✅ |
+| 78 | 771–780 | [part-078-security-integration-ise-trustsec-ftd-umbrella.md](docs/part-078-security-integration-ise-trustsec-ftd-umbrella.md) | Security Integration (ISE, TrustSec, FTD, Umbrella) | ✅ |
+| 79 | 781–790 | [part-079-fullstack-automation-cicd.md](docs/part-079-fullstack-automation-cicd.md) | Full-Stack Automation (Python+Ansible+CI/CD) | ✅ |
+| 80 | 791–800 | [part-080-model-driven-telemetry-streaming.md](docs/part-080-model-driven-telemetry-streaming.md) | Model-Driven Telemetry & Streaming | ✅ |
+| 81 | 801–810 | [part-081-high-availability-nsf-sso-issu.md](docs/part-081-high-availability-nsf-sso-issu.md) | High Availability (NSF/SSO, ISSU) | ✅ |
+| 82 | 811–820 | [part-082-end-to-end-enterprise-qos-design.md](docs/part-082-end-to-end-enterprise-qos-design.md) | End-to-End Enterprise QoS Design | ✅ |
+| 83 | 821–830 | [part-083-enterprise-multicast-deep-dive.md](docs/part-083-enterprise-multicast-deep-dive.md) | Enterprise Multicast Deep Dive Advanced | ✅ |
+| 84 | 831–840 | [part-084-vxlan-evpn-fundamentals.md](docs/part-084-vxlan-evpn-fundamentals.md) | VXLAN/EVPN Fundamentals | ✅ |
+| 85 | 841–850 | [part-085-vxlan-evpn-multisite-advanced.md](docs/part-085-vxlan-evpn-multisite-advanced.md) | VXLAN/EVPN Multisite Advanced | ✅ |
+| 86 | 851–860 | [part-086-mpls-l3vpn-fundamentals.md](docs/part-086-mpls-l3vpn-fundamentals.md) | MPLS L3VPN Fundamentals | ✅ |
+| 87 | 861–870 | [part-087-mpls-l3vpn-advanced-wan-integration.md](docs/part-087-mpls-l3vpn-advanced-wan-integration.md) | MPLS L3VPN Advanced & WAN Integration | ✅ |
+| 88 | 871–880 | [part-088-ipv6-enterprise-deployment.md](docs/part-088-ipv6-enterprise-deployment.md) | IPv6 Enterprise Deployment Deep Dive | ✅ |
+| 89 | 881–890 | [part-089-enterprise-wireless-high-density.md](docs/part-089-enterprise-wireless-high-density.md) | Enterprise Wireless at Scale (High Density) | ✅ |
+| 90 | 891–900 | [part-090-catalyst-9000-advanced-features.md](docs/part-090-catalyst-9000-advanced-features.md) | Catalyst 9000 Advanced Features | ✅ |
+| 91 | 901–910 | [part-091-advanced-troubleshooting-methodology.md](docs/part-091-advanced-troubleshooting-methodology.md) | Advanced Troubleshooting Methodology | ✅ |
+| 92 | 911–920 | [part-092-disaster-recovery-network-resilience.md](docs/part-092-disaster-recovery-network-resilience.md) | Disaster Recovery & Network Resilience | ✅ |
+| 93 | 921–930 | [part-093-cloud-connectivity-aws-azure-gcp.md](docs/part-093-cloud-connectivity-aws-azure-gcp.md) | Cloud Connectivity (AWS/Azure/GCP, Cloud onRamp) | ✅ |
+| 94 | 931–940 | [part-094-zero-trust-network-architecture.md](docs/part-094-zero-trust-network-architecture.md) | Zero Trust Network Architecture | ✅ |
+| 95 | 941–950 | [part-095-ccie-lab-scenario-1-diagnose.md](docs/part-095-ccie-lab-scenario-1-diagnose.md) | CCIE Full Lab Scenario #1 (Diagnose Module) | ✅ |
+| 96 | 951–960 | [part-096-ccie-lab-scenario-2-design.md](docs/part-096-ccie-lab-scenario-2-design.md) | CCIE Full Lab Scenario #2 (Design Module) | ✅ |
+| 97 | 961–970 | [part-097-ccie-lab-scenario-3-deploy.md](docs/part-097-ccie-lab-scenario-3-deploy.md) | CCIE Full Lab Scenario #3 (Deploy Module) | ✅ |
+| 98 | 971–980 | [part-098-ccie-lab-scenario-4-optimize.md](docs/part-098-ccie-lab-scenario-4-optimize.md) | CCIE Full Lab Scenario #4 (Optimize Module) | ✅ |
+| 99 | 981–990 | [part-099-capstone-build-from-scratch.md](docs/part-099-capstone-build-from-scratch.md) | Capstone: Build Enterprise Network From Scratch | ✅ |
+| 100 | 991–1000 | [part-100-career-mastery-exam-strategy.md](docs/part-100-career-mastery-exam-strategy.md) | Career Mastery: Exam Strategy & Real-World Scenarios | ✅ |
 
 ## วิธีใช้หลักสูตรนี้
 
