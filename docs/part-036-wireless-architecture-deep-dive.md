@@ -395,14 +395,8 @@ AP ที่ Client Associate อยู่ปัจจุบัน เมื่�
 ว่า **Intra-Controller Roaming**
 
 ```
-Intra-Controller L2 Roaming (WLC-1 ตัวเดียว - เหมือน Part 20)
-
-Client Database บน WLC-1:
-┌─────────────────┬──────────┬──────┐
-│ Client MAC        │ AP Name   │ VLAN │
-├─────────────────┼──────────┼──────┤
-│ aabb.ccdd.1122     │ AP-1 → AP-2│ 40   │  <- แค่เปลี่ยน AP Name ไม่เปลี่ยน VLAN/IP
-└─────────────────┴──────────┴──────┘
+Client Database บน WLC-1 (Intra-Controller Roaming):
+Client MAC aabb.ccdd.1122 : AP-1 → AP-2, VLAN 40 (ไม่เปลี่ยน)  <- แค่เปลี่ยน AP Name ไม่เปลี่ยน IP
 ```
 
 ### L3 Roaming — Client ย้ายข้าม WLC ที่ VLAN คนละอัน
@@ -417,22 +411,12 @@ Cisco แก้ปัญหานี้ด้วย **Inter-Controller Mobility*
 ที่ Anchor** — Client จึงรักษา IP เดิมไว้ได้ แม้ตัวจะย้ายไปอยู่ Physical Location คนละที่แล้ว
 
 ```
-Inter-Controller L3 Roaming (WLC-1 ↔ WLC-2)
-
 Client (VLAN 40, IP 10.10.40.101) associate กับ AP-1 ที่ WLC-1 (Anchor)
-              │
-              ▼ เดินไปอาคารที่ 2 ที่มี WLC-2 ดูแล (VLAN 140 ท้องถิ่น)
-Client roam ไปยัง AP ที่ join WLC-2 (Foreign)
-              │
-              ▼
-WLC-2 ตรวจสอบ Client Database → พบว่า Client มาจาก WLC-1 (ผ่าน Mobility Group)
-              │
-              ▼
-WLC-2 สร้าง Mobility (EoIP) Tunnel กลับไปยัง WLC-1
-              │
-              ▼
-Client Traffic ทั้งหมดยัง Encapsulate ผ่าน Tunnel กลับไปออกที่ VLAN 40 บน WLC-1 เดิม
-→ Client รักษา IP 10.10.40.101 ไว้ได้ ไม่มี Session ขาด
+  → เดินไปอาคารที่ 2 (WLC-2, VLAN 140 ท้องถิ่น) → Roam ไปยัง AP ที่ join WLC-2 (Foreign)
+  → WLC-2 เช็ค Client Database พบว่า Client มาจาก WLC-1 (ผ่าน Mobility Group)
+  → WLC-2 สร้าง Mobility (EoIP) Tunnel กลับไปยัง WLC-1
+  → Client Traffic ยัง Encapsulate ผ่าน Tunnel ออกที่ VLAN 40 บน WLC-1 เดิม
+  → Client รักษา IP 10.10.40.101 ไว้ได้ ไม่มี Session ขาด
 ```
 
 ### Mobility Group — Config เต็มรูปแบบระหว่าง WLC-1 และ WLC-2
