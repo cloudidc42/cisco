@@ -8,7 +8,7 @@
 > Troubleshoot จุดพังที่พบบ่อยไปแล้ว — Design ทั้งหมดที่เรียนมาใช้งานได้ดีบน Campus เดียว (CORE-SW1/
 > CORE-SW2 + DIST-SW1/3/4) ที่มี Group อยู่ไม่กี่ตัว (`239.1.1.1` All-Hands, `232.50.1.1` Market-Data
 > SSM) แต่คำถามระดับ **CCIE Enterprise Infrastructure** ไม่ใช่ "PIM-SM ทำงานอย่างไร" อีกต่อไป —
-> คำถามคือ **"ถ้า Campus นี้ขยายเป็น 10 อาคารตาม [Part 72](part-072-campus-fabric-scale-design.md)
+> คำถามคือ **"ถ้า Campus นี้ขยายเป็น 10 อาคารตาม [Part 72](part-072-large-campus-fabric-design.md)
 > พร้อม Video/Signage/Training Feed หลายร้อย Group จะเกิดอะไรขึ้นกับ (S,G) State, RP, WAN Link,
 > DMVPN Spoke และ QoS Queue"** — Part นี้จะตอบคำถามนั้นให้ครบทุกมุม ตั้งแต่ Scaling Theory,
 > MVPN Concept, PIM Design Pattern ระดับ Decision Matrix, Boundary Filtering, QoS Integration,
@@ -18,7 +18,7 @@
 ## Use Case ที่จะขับเคลื่อน Part นี้: "จาก 1 Campus สู่ Enterprise ระดับ CCIE"
 
 ทีม Network ของบริษัทเพิ่งได้รับอนุมัติ Budget ขยาย Campus HQ จาก 4 Distribution Block (DIST-SW1,
-DIST-SW2, DIST-SW3, DIST-SW4 เดิม) ไปเป็น **10 อาคาร** ตามแผน [Part 72](part-072-campus-fabric-scale-design.md)
+DIST-SW2, DIST-SW3, DIST-SW4 เดิม) ไปเป็น **10 อาคาร** ตามแผน [Part 72](part-072-large-campus-fabric-design.md)
 พร้อมกันนั้นฝ่าย Corporate Communications ก็ต้องการเพิ่ม Use Case ใหม่ที่ใช้ Multicast ทุกอาคาร:
 
 ```

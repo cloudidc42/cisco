@@ -642,7 +642,7 @@ CORE-SW1(config)# service password-encryption
 ```
 
 - **Management Plane**: ทุกอย่างที่ใช้ "บริหารจัดการ" ตัวอุปกรณ์เอง — SSH, TACACS+, SNMP —
-  Part นี้ (AAA + Hardening) และ [Part 14](part-014-acl-fundamentals.md) (ACL) คือแนวป้องกันหลัก
+  Part นี้ (AAA + Hardening) และ [Part 14](part-014-access-control-lists.md) (ACL) คือแนวป้องกันหลัก
 - **Control Plane**: Process ภายในที่ทำให้อุปกรณ์ "รู้ทาง" เช่น Routing Protocol, STP — ถ้าถูก
   โจมตีด้วย Packet จำนวนมาก (เช่น ปลอม OSPF Hello ถี่ๆ) CPU อุปกรณ์อาจพังจนควบคุมไม่ได้เลย
 - **Data Plane**: Traffic ของ User ทั่วไปที่วิ่งผ่านอุปกรณ์ (Forwarding เฉยๆ ไม่แตะ CPU มากถ้าใช้

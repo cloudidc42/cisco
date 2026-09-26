@@ -196,7 +196,7 @@ PC1 (10.10.10.11) ──DNS Query──► Internal DNS Server (Part 16, 10.10.3
 
 ### เชื่อมกับ SD-WAN Cloud onRamp for SaaS (Part 76) — เมื่อ Branch ไม่ผ่าน WAN Edge กลับมา Campus
 
-[Part 76](part-076-sd-wan-advanced-cloud-onramp.md) ออกแบบ **Cloud onRamp for SaaS** ให้ Branch
+[Part 76](part-076-sdwan-advanced-design.md) ออกแบบ **Cloud onRamp for SaaS** ให้ Branch
 ที่ใช้ SD-WAN สามารถส่ง Traffic ของ SaaS App (Office 365, Salesforce) **ตรงออก Internet จาก
 Branch เอง** (Direct Internet Access — DIA) โดยไม่ต้อง Backhaul ผ่าน FW-1 ที่ Campus — วิธีนี้
 เร็วกว่ามากแต่สร้างจุดบอดใหม่: **Traffic DIA นี้ไม่ผ่าน FW-1 เลย** ถ้าไม่มีการป้องกันเพิ่ม
@@ -766,7 +766,7 @@ Part นี้ไม่ได้สร้างเทคโนโลยีให
 ถึง [Part 44](part-044-dot1x-trustsec.md) ให้กลายเป็น **สถาปัตยกรรมเดียวที่พึ่งพากันจริง** — เริ่ม
 จากภาพรวม Integration Map (Step 771), เปิดตัว **Cisco Umbrella** เป็นชั้นป้องกันบน Cloud ที่เสริม
 (ไม่แทนที่) FTD ทั้งในรูปแบบ Roaming Client และ Umbrella for Network ที่เชื่อมกับ SD-WAN Cloud
-onRamp for SaaS ของ [Part 76](part-076-sd-wan-advanced-cloud-onramp.md) (Step 772-773), พิสูจน์
+onRamp for SaaS ของ [Part 76](part-076-sdwan-advanced-design.md) (Step 772-773), พิสูจน์
 ด้วย Worked Example ว่า **ISE + TrustSec + FTD** Integrate กันจริงผ่าน **pxGrid** โดยให้ FTD
 เขียน Firewall Policy ด้วย SGT เดียวกันที่ ISE แจกผ่าน 802.1X (Step 774-775), สร้าง **Rapid
 Threat Containment** ที่ Quarantine Endpoint อัตโนมัติผ่าน SecureX/XDR + ANC + CoA (Step 776),

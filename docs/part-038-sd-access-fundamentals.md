@@ -398,7 +398,7 @@ Hop** (ฝังใน VXLAN Header ตาม Step 374) ทำให้ Border/E
 **Cisco DNA Center (DNAC)** เป็น Controller/Orchestrator ที่ทำหน้าที่ **Single Source of Truth**
 ตามที่กล่าวไว้ใน Step 371 — เกือบทุกอย่างที่ SD-Access ทำ **ไม่ได้เขียนผ่าน CLI โดยตรงแบบ Part
 1–37 ที่ผ่านมา** แต่เขียนผ่าน **GUI Workflow** บน DNAC แล้วให้ DNAC สร้าง Config (ผ่าน NETCONF/
-RESTCONF, ทบทวนได้ที่ [Part 49](part-049-network-automation.md) หากมี) ไป Push เข้าอุปกรณ์แทน
+RESTCONF, ทบทวนได้ที่ [Part 49](part-049-netconf-restconf-yang-deep-dive.md) หากมี) ไป Push เข้าอุปกรณ์แทน
 
 ### หน้าที่หลักของ DNA Center 2 อย่างที่ต้องรู้สำหรับ Part นี้
 

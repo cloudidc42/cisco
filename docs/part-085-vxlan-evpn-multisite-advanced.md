@@ -835,7 +835,7 @@ EVPN Multisite ที่สร้างใน Part นี้ **ไม่ใช�
 
 หัวข้อ Disaster Recovery แบบครบวงจร (RPO/RTO, Backup Strategy, Runbook, Site Failover Testing,
 Application-layer DR ที่ไม่ใช่แค่ Network) จะอยู่ใน
-**[Part 92 — Disaster Recovery & Network Resilience](part-092-disaster-recovery-resilience.md)**
+**[Part 92 — Disaster Recovery & Network Resilience](part-092-disaster-recovery-network-resilience.md)**
 ซึ่งจะใช้ DC1/DC2 Multisite Fabric ที่สร้างไว้ใน Part นี้เป็นฐาน Infrastructure ของ DR Design
 เต็มรูปแบบ (รวม Automation ของ Failover, Health-check, และ GSLB/DNS)
 

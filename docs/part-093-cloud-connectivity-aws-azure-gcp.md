@@ -45,7 +45,7 @@
 
 ตั้งแต่ [Part 15](part-015-nat-pat.md) (NAT/PAT) หลักสูตรนี้สอนไปแล้วว่า Enterprise ออก Internet
 ได้ผ่าน WAN-EDGE-1/2 อยู่แล้ว ซึ่งในทางเทคนิค **เพียงพอ**ที่จะสร้าง Site-to-Site VPN (IPsec, ตาม
-[Part 51](part-051-site-to-site-vpn.md)) ไปยัง AWS Virtual Private Gateway หรือ Azure VPN
+[Part 51](part-051-vrf-lite-gre-ipsec.md)) ไปยัง AWS Virtual Private Gateway หรือ Azure VPN
 Gateway ได้ทันทีโดยไม่ต้องรอ Part นี้เลย — คำถามคือ **แล้วทำไมองค์กรขนาดใหญ่ยังลงทุนหลักแสนถึง
 หลักล้านบาทต่อปีกับ Direct Connect/ExpressRoute ทั้งที่ Internet VPN ก็ "ใช้งานได้" เหมือนกัน**
 
@@ -145,7 +145,7 @@ Gateway ได้ทันทีโดยไม่ต้องรอ Part นี
 | **Transit VIF** | หลาย VPC/หลาย Region ผ่าน Direct Connect Gateway + Transit Gateway | แยก Session แต่ Advertise ครอบคลุมทุก VPC ที่ Attach กับ Transit Gateway | Enterprise ที่มีหลาย VPC ตาม Business Unit (Step 925) |
 
 > **เทียบกับหลักสูตรนี้**: VIF แต่ละแบบทำงานเหมือน **Sub-interface + VLAN** ที่ Part
-> [Part 8](part-008-inter-vlan-routing.md) สอน (Router on a Stick) — Physical Cross Connect
+> [Part 10](part-010-inter-vlan-routing.md) สอน (Router on a Stick) — Physical Cross Connect
 > เส้นเดียวถูกแบ่งด้วย 802.1Q VLAN Tag ออกเป็นหลาย Logical Interface แต่ละ Interface มี BGP
 > Session ของตัวเอง คนละความหมายของ Traffic ที่วิ่งผ่าน
 
@@ -198,7 +198,7 @@ WAN-EDGE-1(config)# ip route 10.10.0.0 255.255.0.0 Null0 250
 ```
 
 - **`encapsulation dot1Q 100`** — Cisco IOS-XE ใช้ 802.1Q Tagging เดียวกันกับที่สอนใน
-  [Part 8](part-008-inter-vlan-routing.md) เพื่อแยก VIF แต่ละตัวบน Physical Circuit เส้นเดียว
+  [Part 10](part-010-inter-vlan-routing.md) เพื่อแยก VIF แต่ละตัวบน Physical Circuit เส้นเดียว
 - **`169.254.100.1/30`** — AWS ใช้ Link-Local Range (RFC 3927) เป็นค่า Default สำหรับ BGP Peering
   IP ของ Private VIF (ลูกค้าสามารถระบุ Subnet ของตัวเองแทนได้ถ้าต้องการ)
 - **`ip route ... Null0 250`** — เทคนิคเดียวกับที่ [Part 29 Step 285](part-029-bgp-fundamentals.md)
@@ -436,7 +436,7 @@ Cloud** ที่รวบ VPC/VNet หลายตัวเข้าด้ว�
 
 Transit Gateway รองรับ **หลาย Route Table** ในตัวเดียว — ทำให้ VPC บางกลุ่มมองเห็นกันได้
 (Route Propagate เข้า Route Table เดียวกัน) และบางกลุ่มถูกแยก Isolate จากกันโดยสมบูรณ์ (อยู่คนละ
-Route Table) หลักการเดียวกับ **VRF** ที่ [Part 40-42](part-040-mpls-vrf-fundamentals.md) สอนไว้
+Route Table) หลักการเดียวกับ **VRF** ที่ [Part 51](part-051-vrf-lite-gre-ipsec.md) สอนไว้
 เพียงแค่ย้ายมาทำที่ TGW แทน Physical Router:
 
 ```
