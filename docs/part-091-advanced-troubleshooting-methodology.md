@@ -1,7 +1,7 @@
 # Part 91 — Advanced Troubleshooting Methodology
 **หลักสูตร Cisco CCNA → CCNP → CCIE | Step 901–910 จาก 1000 | ระดับ CCIE Enterprise Infrastructure**
 
-> ต่อจาก [Part 90 — Catalyst 9000 Advanced Features](part-090-catalyst-9000-advanced-features.md)
+> ต่อจาก [Part 90 — Catalyst 9000 Series Advanced Features](part-090-catalyst-9000-advanced-features.md)
 > ที่ปิดท้ายเนื้อหาเชิง Feature/Platform เฉพาะทางแล้ว **Part นี้เปลี่ยนแนวทางแบบสิ้นเชิง** — Part
 > 56-69 สอน Troubleshooting ไปแล้วทีละโดเมน (EIGRP, OSPF, BGP, Redistribution, DMVPN/VPN, Infra
 > Security, Infra Services, NAT, Path Control/PBR, Multicast, Wireless, Automation, QoS) และ Part
@@ -290,7 +290,7 @@ DIST-SW2# show archive config differences
 -  ip ospf dead-interval 12
 ```
 
-คำสั่งนี้ (สอนไว้ตั้งแต่ [Part 58 Step 683.4](part-069-mega-lab-1.md) ที่ใช้จริงในการหา Root Cause
+คำสั่งนี้ (สอนไว้ตั้งแต่ [Part 69 Step 683.4](part-069-mega-lab-1.md) ที่ใช้จริงในการหา Root Cause
 ของ Mega-Lab) ตอบคำถาม "อะไรเปลี่ยนไปบนเครื่องนี้" ได้ทันทีโดยไม่ต้องอ่าน Config ทั้งไฟล์เลย —
 ข้อจำกัดคือใช้ได้เฉพาะเทียบกับ Checkpoint ล่าสุดบนเครื่องนั้นเครื่องเดียว (ไม่มี History ยาวย้อนหลัง
 หลายวัน)
