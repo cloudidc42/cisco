@@ -52,19 +52,14 @@ Timer ของตัวเองเข้าไป เพราะ UDP ไม�
 ### DTLS Handshake ระหว่าง AP กับ WLC (ตอน Join)
 
 ```
-AP (Client role ของ DTLS)                          WLC-1 (Server role ของ DTLS)
-      │                                                    │
-      │──── 1. ClientHello (Cipher Suite ที่รองรับ) ───────►│
-      │◄─── 2. ServerHello + Certificate (WLC) ────────────│
-      │         + ServerKeyExchange + CertificateRequest    │
-      │──── 3. Certificate (AP - ใช้ MIC*) ─────────────────►│
-      │      + ClientKeyExchange + CertificateVerify        │
-      │      + ChangeCipherSpec + Finished                  │
-      │◄─── 4. ChangeCipherSpec + Finished ─────────────────│
-      │                                                    │
-      │======= DTLS Tunnel พร้อมใช้งาน (Encrypted) =========│
-      │──── 5. CAPWAP Join Request (ผ่าน Tunnel) ──────────►│
-      │◄─── 6. CAPWAP Join Response ────────────────────────│
+AP (DTLS Client)                                          WLC-1 (DTLS Server)
+   │──1. ClientHello (Cipher Suite ที่รองรับ)──────────────►│
+   │◄─2. ServerHello + Certificate(WLC) + KeyExchange───────│
+   │──3. Certificate(AP - ใช้ MIC*) + KeyExchange + Finished►│
+   │◄─4. ChangeCipherSpec + Finished─────────────────────────│
+   │========== DTLS Tunnel พร้อมใช้งาน (Encrypted) ==========│
+   │──5. CAPWAP Join Request (ผ่าน Tunnel)──────────────────►│
+   │◄─6. CAPWAP Join Response────────────────────────────────│
 ```
 
 > **MIC (Manufacturer Installed Certificate)** — AP ทุกตัวจาก Cisco มี Certificate ติดตัวมาจาก
@@ -110,19 +105,10 @@ CAPWAP Header + (DTLS Header ถ้าเปิด) + 802.11 Frame ของ Cli
 ประมาณ **36-60 byte** ต่อ Packet
 
 ```
-Ethernet MTU ปกติ = 1500 byte
-Client ส่ง Frame ขนาดใกล้ 1500 byte (เช่น TCP MSS เต็มขนาด)
-        │
-        ▼
-AP ห่อ CAPWAP Header + IP/UDP Header ทับ → รวมอาจเกิน 1500 byte
-        │
-        ▼
-ถ้า Path ระหว่าง AP ↔ WLC มี MTU = 1500 พอดี → CAPWAP ต้อง Fragment เป็น 2 IP Packet
-        │
-        ▼
-ผลกระทบ: Throughput ลดลง (Overhead ของการ Fragment/Reassemble), Latency เพิ่ม,
-         และถ้า Router/Firewall กลางทาง Drop Fragment (บางองค์กร Block ด้วยเหตุผล Security)
-         → Client จะเจอปัญหา Throughput ต่ำผิดปกติแบบอธิบายไม่ได้
+Client ส่ง Frame ใกล้ 1500 byte → AP ห่อ CAPWAP+IP/UDP Header ทับ → รวมอาจเกิน MTU 1500
+→ ถ้า Path ระหว่าง AP ↔ WLC มี MTU 1500 พอดี ต้อง Fragment เป็น 2 IP Packet
+→ ผลกระทบ: Throughput ลดลง, Latency เพิ่ม, และถ้า Firewall กลางทาง Drop Fragment (บาง
+  องค์กร Block ด้วยเหตุผล Security) Client จะเจอ Throughput ต่ำผิดปกติแบบอธิบายไม่ได้
 ```
 
 **วิธีแก้ที่ Cisco แนะนำ**: เพิ่ม MTU บน Interface ตลอด Path ระหว่าง AP กับ WLC เป็นอย่างน้อย
@@ -201,13 +187,9 @@ Plane ผ่าน CAPWAP Control Tunnel อยู่เหมือนเดิ
 Mode พร้อม Local Switching สำหรับ VLAN 40 เพื่อไม่ให้ Client Data ต้อง Hair-pin ผ่าน WAN
 
 ```
-Before (Part 20): Centralized Mode                After (Part 36): FlexConnect + Local Switching
-
-Client → AP-2 → CAPWAP Data → WLC-1               Client → AP-2 → Switch Local ทันที
-         (ผ่าน WAN ทุก Packet)                              (ไม่ผ่าน WAN เลย สำหรับ Data)
-         → VLAN 40 ที่ WLC-1                                 → VLAN 40 ที่ ACCESS-SW4/DIST-SW4
-                                                              (Control Plane เท่านั้นที่ยังวิ่งผ่าน
-                                                               WAN ไปคุยกับ WLC-1 - CAPWAP Control)
+Before (Part 20 - Centralized): Client → AP-2 → CAPWAP Data (ผ่าน WAN) → WLC-1 → VLAN 40
+After  (Part 36 - FlexConnect):  Client → AP-2 → Switch Local ทันที → VLAN 40 ที่ DIST-SW4
+                                  (มีแค่ CAPWAP Control เท่านั้นที่ยังวิ่งผ่าน WAN ไปคุย WLC-1)
 ```
 
 > ตาม Access-Layer Mapping ใน `docs/00-ip-address-plan.md` นั้น ACCESS-SW4 Trunk VLAN 30, 40,
@@ -351,22 +333,10 @@ Data Rate ที่ใช้งานได้จริงต่ำลงแม�
 Roaming ระหว่าง AP ได้อย่างราบรื่นโดยไม่มี "Dead Zone" (จุดที่สัญญาณจาก AP ทั้งสองอ่อนเกินไป)
 
 ```
-Cell Overlap ที่เหมาะสม (15-20%)
+AP-1 Cell ░░Overlap 15-20%░░ AP-2 Cell   <- เหมาะสม: Client roam ราบรื่น ไม่มี CCI สูงเกินไป
 
-   AP-1 Cell                    AP-2 Cell
-┌──────────────┐          ┌──────────────┐
-│              │  ◄─15-20%─►│              │
-│      ●AP-1    │░░░░░░░░░░│    ●AP-2      │
-│              │  Overlap  │              │
-└──────────────┘   Zone    └──────────────┘
-                 (Client roam ราบรื่นในโซนนี้)
-
-Overlap น้อยเกินไป (<10%)              Overlap มากเกินไป (>30%)
-┌──────────┐  ┌──────────┐         ┌──────────────┐┌──────────────┐
-│    ●AP-1  │  │   ●AP-2   │         │      ●AP-1    ││    ●AP-2      │
-└──────────┘  └──────────┘         └──────────────┘└──────────────┘
-    Dead Zone ระหว่าง AP                  Co-Channel Interference สูง
-    (สัญญาณอ่อนเกินไปตรงกลาง)              (AP ใช้ Channel เดียวกันแล้วรบกวนกัน)
+AP-1 Cell   (ห่างเกินไป)   AP-2 Cell     <- Overlap <10%: เกิด Dead Zone ตรงกลาง สัญญาณอ่อน
+AP-1 Cell ░░░░ทับกันมาก░░░░ AP-2 Cell    <- Overlap >30%: Co-Channel Interference สูง
 ```
 
 ### Channel และ Power Planning — เป้าหมายคือ Balance ระหว่าง Coverage กับ Interference
@@ -628,18 +598,10 @@ Mobility State ทั้งหมดไปที่ Standby ตลอดเว�
 > Cross-link ของ WAN-EDGE-1 ↔ WAN-EDGE-2)
 
 ```
-Topology ของ AP SSO HA Pair
-
-┌──────────────┐  Gi3 (Redundancy Port)   ┌──────────────────┐
-│   WLC-1        │◄────10.10.253.0/30─────►│  WLC-1-STANDBY     │
-│  (Active)      │      Heartbeat Link      │  (Standby-Hot)     │
-│  10.10.99.40   │                          │  10.10.99.41 (RMI)  │
-└──────┬───────┘                          └────────┬─────────┘
-       │                                             │
-       └───────────────┬─────────────────────────────┘
-                        ▼
-              Wireless Management IP (RMI) ร่วม: 10.10.99.40
-              (AP ทุกตัว join ที่ IP นี้เพียง IP เดียว — ไม่รู้เลยว่ามี WLC 2 ตัว)
+WLC-1 (Active, 10.10.99.40) ◄──Gi3 Redundancy Port (10.10.253.0/30)──► WLC-1-STANDBY (Standby-Hot)
+              │                                                              │
+              └──────────────────── Wireless Mgmt IP (RMI) ร่วม: 10.10.99.40 ─┘
+                    (AP ทุกตัว join ที่ IP นี้เพียง IP เดียว — ไม่รู้เลยว่ามี WLC 2 ตัว)
 ```
 
 ```
@@ -675,20 +637,12 @@ WLC-1-STANDBY(config)# chassis redundancy ha-interface GigabitEthernet3 local-ip
 ### AP SSO ทำงานอย่างไรตอน Active ล่ม
 
 ```
-ก่อน Failover: WLC-1 (Active) กำลังให้บริการ AP-1/AP-2 อยู่ปกติ
-       │
-       ▼ WLC-1 (Active) ล่ม (Power/Software Crash)
-WLC-1-STANDBY ตรวจจับได้ทันทีผ่าน Redundancy Port (Heartbeat หายไป)
-       │
-       ▼ Stateful Switchover (SSO)
-WLC-1-STANDBY เลื่อนขึ้นเป็น Active ทันที พร้อม State ที่ Sync มาแล้วล่วงหน้า:
-  - CAPWAP Session ของ AP-1/AP-2 (ไม่ต้อง Rejoin!)
-  - Client Database (Client ไม่ต้อง Re-associate/Re-DHCP)
-  - Mobility State, RRM State
-       │
-       ▼
-AP-1/AP-2 ยังคง "Registered" ต่อเนื่อง — เห็นแค่ WLC IP เดิม (10.10.99.40) ไม่เคยเปลี่ยน
-Client ที่ใช้งานอยู่ (เช่น กำลัง Video Call) **ไม่หลุด** เพราะ Session ทั้งหมดถูก Sync ไว้แล้ว
+WLC-1 (Active) ล่ม (Power/Software Crash)
+   → WLC-1-STANDBY ตรวจจับทันทีผ่าน Redundancy Port (Heartbeat หายไป)
+   → Stateful Switchover (SSO): เลื่อนขึ้นเป็น Active พร้อม State ที่ Sync ไว้ล่วงหน้าแล้ว
+     (CAPWAP Session ของ AP-1/AP-2, Client Database, Mobility/RRM State — ไม่ต้อง Rejoin!)
+   → AP-1/AP-2 ยังคง "Registered" ต่อเนื่อง เห็นแค่ WLC IP เดิม (10.10.99.40) ไม่เคยเปลี่ยน
+   → Client ที่ใช้งานอยู่ (เช่น กำลัง Video Call) ไม่หลุด เพราะ Session ถูก Sync ไว้แล้ว
 ```
 
 > **นี่คือความต่างสำคัญจาก N+1 HA**: ถ้าเป็น N+1 (AP มี Primary/Secondary Controller
@@ -749,19 +703,13 @@ Mobility Group ที่สอนใน Step 354 (ทุก WLC รู้จั�
 | **Mobility Agent (MA)** | ดูแล AP/Client เฉพาะพื้นที่ตัวเอง (Local เท่านั้น) แล้ว **Forward คำถาม Mobility ไปหา MC ที่ตนสังกัด** แทนที่จะคุยกับ WLC อื่นตรงๆ | WLC ที่กระจายอยู่ตามอาคาร/สาขา จำนวนมาก (Fabric Edge) |
 
 ```
-สถาปัตยกรรมแบบ Hierarchical MC/MA (สำหรับองค์กรขนาดใหญ่มาก)
+Mobility Controller (WLC กลาง - Global Client View)
+        │
+        ├── Mobility Agent (อาคาร A) ── AP/Client ท้องถิ่น
+        ├── Mobility Agent (อาคาร B) ── AP/Client ท้องถิ่น
+        └── Mobility Agent (อาคาร C) ── AP/Client ท้องถิ่น
 
-                    ┌─────────────────────┐
-                    │  Mobility Controller  │  <- รู้จัก Client ทุกตัวใน Domain (Global View)
-                    │      (เช่น WLC กลาง)   │
-                    └──────────┬───────────┘
-           ┌────────────────────┼────────────────────┐
-           ▼                    ▼                    ▼
-   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-   │ Mobility Agent │    │ Mobility Agent │    │ Mobility Agent │
-   │   (อาคาร A)     │    │   (อาคาร B)     │    │   (อาคาร C)     │
-   └──────────────┘    └──────────────┘    └──────────────┘
-   Client Roam ระหว่าง MA ต่างตัว → ถาม MC กลางเป็นตัวกลางเสมอ (ไม่ Full-mesh กันเอง)
+Client Roam ระหว่าง MA ต่างตัว → ถาม MC กลางเป็นตัวกลางเสมอ (ไม่ Full-mesh กันเองแบบ Flat Group)
 ```
 
 > **ในบริบทหลักสูตรนี้** (WLC-1 กับ WLC-2 ใน Step 354) ทั้งสองตัวทำหน้าที่เป็น **Mobility
