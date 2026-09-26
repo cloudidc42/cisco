@@ -494,33 +494,11 @@ ip prefix-list LEGACY-SERVER:
 **`hit count: 0`** คือหลักฐานชี้ตรงที่สุด — Sequence นี้ไม่เคย Match Route ไหนเลยตั้งแต่ถูกสร้าง
 (หรือแก้ไข) มา ยืนยันว่า Prefix-list เขียนผิดจนไม่ Match อะไรเลยจริงๆ ไม่ใช่ปัญหาที่จุดอื่น
 
-```
-! Step 3: ตรวจ Route-map ที่ผูก Prefix-list นี้อยู่เพื่อดูว่า Implicit Deny ทำงานที่ปลายด้วยหรือไม่
-DIST-SW3# show route-map EIGRP-TO-OSPF
-route-map EIGRP-TO-OSPF, deny, sequence 10
-  Match clauses:
-    tag 110
-  Policy routing matches: 0 packets, 0 bytes
-route-map EIGRP-TO-OSPF, permit, sequence 20
-  Match clauses:
-  Set clauses:
-    tag 90
-  Policy routing matches: 892 packets, ...
-```
-
-รอ Route-map ตัวนี้เป็นตัว Loop-guard จาก Step 583 (Sequence 10/20) **ไม่ใช่ตัวที่ผูกกับ
-Prefix-list `LEGACY-SERVER` เลย** — เพราะ Design ใน Part 31 Step 306→307 ได้เปลี่ยนจาก
-Route-map `EIGRP-TO-OSPF-SELECTIVE` (ที่ผูก Prefix-list) มาเป็น `EIGRP-TO-OSPF` (ที่ผูก Tag
-เท่านั้น) แทนไปแล้ว ทำให้ Prefix-list ทั้งหมดที่ `LEGACY-SERVER` **ไม่ได้ถูกใช้งานอยู่จริง** ใน
-Design ปัจจุบันของ Lab — คำอธิบายนี้ใช้กับ Lab อ้างอิงของ Part 31 พอดี แต่**ในระบบจริงที่ยังใช้
-Prefix-list ควบคุม Selective Redistribution อยู่ (ไม่ได้เปลี่ยนไปใช้ Tag-only แบบ Lab นี้)**
-Hit Count = 0 คือหลักฐานตรงประเด็นที่สุดเสมอ
-
-> **หมายเหตุสำหรับผู้เรียน**: Scenario นี้ตั้งใจใช้ Prefix-list `LEGACY-SERVER` แบบเดี่ยวๆ
-> (ไม่ผ่าน Route-map ของ Loop-guard) เพื่อสาธิตปัญหา `ge`/`le` โดยเฉพาะ — ถือว่าเป็น Site
-> ที่ยังใช้ Selective Redistribution แบบ Step 306 อยู่ (ก่อนจะเปลี่ยนไปใช้ Tag-only Design เต็ม
-> รูปแบบของ Step 307) ซึ่งเป็นรูปแบบที่พบได้จริงในหลาย Production Network ที่ไม่ต้องการ Mutual
-> Redistribution แบบเต็ม
+(Site นี้ยังคง Combine Selective Redistribution ของ Step 306 เข้ากับ Tag Loop-guard ของ
+Step 307 ไว้ด้วยกัน — Route-map `EIGRP-TO-OSPF-SELECTIVE` จึงมีทั้ง `match ip address
+prefix-list LEGACY-SERVER` และ `set tag 90` อยู่ใน Sequence เดียวกัน ซึ่งเป็นรูปแบบที่พบได้จริง
+ในหลาย Production Network ที่ต้องการทั้งกรอง Prefix และป้องกัน Loop ไปพร้อมกัน) **Hit Count = 0**
+จาก Step 2 คือหลักฐานที่ชี้ตรงจุดที่สุดแล้วว่า Root Cause อยู่ที่ Prefix-list ไม่ใช่ Route-map
 
 ### Fix — แก้ Prefix-list ให้ครอบคลุมทั้ง Subnet เดิมและ Subnet ใหม่อย่างถูกต้อง
 
@@ -742,15 +720,8 @@ CORE-SW1# show ip ospf database external 10.199.200.0
 ```
 ! Step 2: คำนวณ Cost จริงของทั้งสอง Path เพื่อยืนยันว่า E1 ชนะแม้ Cost จะแพงกว่า
 ! Path ผ่าน DIST-SW3 (E2): Cost คงที่ = 20 เท่านั้น ไม่ว่า Internal Cost จะเป็นเท่าไหร่
-! Path ผ่าน DIST-SW4 (E1): Cost = 20 (seed) + Internal Cost จาก CORE-SW1 ไปยัง DIST-SW4
-CORE-SW1# show ip ospf interface TenGigabitEthernet1/0/2 | include Cost
-  Process ID 1, Router ID 1.1.1.1, Network Type BROADCAST, Cost: 1
-CORE-SW2# show ip ospf interface TenGigabitEthernet1/0/2 | include Cost
-  Process ID 1, Router ID 1.1.1.2, Network Type BROADCAST, Cost: 1
-DIST-SW4# show ip ospf interface GigabitEthernet1/1/1 | include Cost
-  Process ID 1, Router ID 1.1.1.14, Network Type BROADCAST, Cost: 1
-! รวม Internal Cost CORE-SW1 -> CORE-SW2 (Po1) -> DIST-SW4 = 1 + 1 = 2 (ตัวอย่างสมมติให้ตัวเลขกลม)
-! รวมกับ Cost ภายใน Area1<->Area2 ผ่าน ABR อีกส่วน สมมติค่ารวมจริงจาก show ip route คือ 11
+! Path ผ่าน DIST-SW4 (E1): Cost = 20 (seed) + Internal Cost สะสมจาก CORE-SW1 ไปยัง DIST-SW4
+! รวม Internal Cost ผ่าน CORE-SW2 (Po1) + Area 2 ตาม show ip ospf interface ทุก Hop = 11
 ! -> E1 Total Cost = 20 + 11 = 31 (ตรงกับ metric 31 ที่เห็นใน show ip route จริง)
 ```
 
@@ -1005,17 +976,13 @@ PC-Legacy> traceroute 10.10.10.55
   5  10.10.10.55
 ```
 
-(ในกรณี Lab นี้ เนื่องจาก OSPF Cost ทั้งสองฝั่ง Area2 เท่ากันและ Cost รวมจาก DIST-SW3/DIST-SW4
-ไปยัง CORE ใกล้เคียงกัน อาจยังเห็น Path เดิมสำหรับบางทิศทางถ้า ECMP ไม่ทำงานพอดี — สิ่งสำคัญที่
-สุดที่ต้อง Verify คือ**ทั้งสองทิศทาง Redistribute กลับมาสมบูรณ์ทั้ง 2 จุดเหมือนกันแล้ว** ตาม
-Design ส่วน Path จะสมมาตรสนิทหรือไม่ขึ้นกับ Cost จริงของ Topology อีกที)
+(สิ่งสำคัญที่สุดที่ต้อง Verify คือ**ทั้งสองทิศทาง Redistribute กลับมาสมบูรณ์ทั้ง 2 จุดเหมือนกัน
+แล้ว** ตาม Design — ส่วน Path จะสมมาตรสนิทหรือไม่ขึ้นกับ Cost จริงของ Topology อีกที)
 
-> **หมายเหตุกรณีตรงข้าม (ควรมีจุดเดียว แต่กลับมี 2 จุด)**: ถ้า Design ตั้งใจให้ Redistribute
-> เกิดที่**จุดเดียวเท่านั้น** (เช่นเพื่อควบคุม Traffic Engineering หรือหลีกเลี่ยงความซับซ้อนของ
-> Tag-based Loop Prevention) แต่มีคนเผลอเพิ่ม Redistribute Statement ที่จุดที่สองเข้ามาโดยไม่ได้
-> ตั้งใจ (เช่น Config Template ที่ Copy ผิด) จะเกิดปัญหาย้อนกลับคือ **Loop แบบ Step 583** ทันที
-> ถ้าไม่มี Tag ป้องกันไว้ล่วงหน้า — ดังนั้นทุกครั้งที่ตรวจสอบ Design ต้องถามเสมอว่า **"จำนวนจุด
-> Redistribute ที่มีอยู่จริงตรงกับจำนวนที่ Design ต้องการหรือไม่"** ทั้งสองทิศทาง
+> **กรณีตรงข้าม (ควรมีจุดเดียว แต่กลับมี 2 จุด)**: ถ้า Design ตั้งใจให้ Redistribute เกิดที่
+> จุดเดียวเท่านั้น แต่มีคนเผลอเพิ่ม Statement ที่จุดที่สองเข้ามาโดยไม่ตั้งใจ (เช่น Copy Template
+> ผิด) จะเกิดปัญหาย้อนกลับคือ **Loop แบบ Step 583** ทันทีถ้าไม่มี Tag ป้องกันไว้ล่วงหน้า —
+> ต้องตรวจสอบเสมอว่า "จำนวนจุด Redistribute ที่มีอยู่จริงตรงกับที่ Design ต้องการหรือไม่"
 
 ---
 
@@ -1163,11 +1130,7 @@ EIGRP-R1# show ip route eigrp | include 10.10
 D EX    10.10.10.0/24 [170/28160256] via 10.199.34.1, 00:01:12, GigabitEthernet0/0
 D EX    10.10.20.0/24 [170/28160256] via 10.199.34.1, 00:01:12, GigabitEthernet0/0
 D EX    10.10.30.0/24 [170/28160256] via 10.199.34.1, 00:01:12, GigabitEthernet0/0
-D EX    10.10.40.0/24 [170/28160256] via 10.199.34.1, 00:01:12, GigabitEthernet0/0
-D EX    10.10.99.0/24 [170/28160256] via 10.199.34.1, 00:01:12, GigabitEthernet0/0
-```
 
-```
 ! Verify 2: Ticket 2 - LSA Sequence Number คงที่ไม่วิ่งขึ้นอีก (รอ 5 นาทีแล้ว Poll ซ้ำ)
 CORE-SW2# show ip ospf database external 10.10.20.0
   Advertising Router: 1.1.1.14
@@ -1176,41 +1139,30 @@ CORE-SW2# show ip ospf database external 10.10.20.0
 CORE-SW2# show ip ospf database external 10.10.20.0
   Advertising Router: 1.1.1.14
   LS Seq Number: 80000050     <--- ค่าเดิม ไม่โตอีก ยืนยัน Loop หมดแล้ว
-```
 
-```
 ! Verify 3: CPU กลับสู่ระดับปกติ
 CORE-SW1# show processes cpu sorted | exclude 0.00%  0.00%  0.00%
 CPU utilization for five seconds: 3%/1%; one minute: 4%; five minutes: 5%
  PID Runtime(ms)     Invoked      uSecs   5Sec   1Min   5Min TTY Process
  142    412900       28299       1023   0.50%   0.61%   0.55%   0 OSPF Router
-```
 
-```
-! Verify 4: Route-map Loop-guard ทำงานถูกต้องทั้ง DIST-SW3 และ DIST-SW4 เหมือนกันแล้ว
+! Verify 4: Route-map Loop-guard เหมือนกันทั้ง DIST-SW3/DIST-SW4 แล้ว
 DIST-SW3# show route-map OSPF-TO-EIGRP
 route-map OSPF-TO-EIGRP, deny, sequence 10
   Match clauses:
     tag 90
-  Set clauses:
 route-map OSPF-TO-EIGRP, permit, sequence 20
-  Match clauses:
   Set clauses:
     tag 110
-
 DIST-SW4# show route-map OSPF-TO-EIGRP
 route-map OSPF-TO-EIGRP, deny, sequence 10
   Match clauses:
     tag 90
-  Set clauses:
 route-map OSPF-TO-EIGRP, permit, sequence 20
-  Match clauses:
   Set clauses:
     tag 110
-```
 
-```
-! Verify 5: Traceroute ยืนยัน End-to-End ใช้งานได้ปกติ ไม่มี Loop
+! Verify 5: Traceroute End-to-End ปกติ ไม่มี Loop
 PC1(10.10.10.55)> traceroute 10.199.200.10
   1  10.10.10.1
   2  10.255.10.1

@@ -204,25 +204,13 @@ IP address       Client-ID/Hardware address     Lease expiration        Type
 10.10.60.21      0100.5056.aa11.bb              Sep 27 2026 08:12 AM    Automatic
 ```
 
-> **ข้อสังเกตสำคัญ**: `show ip dhcp binding` ที่รันบน **DIST-SW1 (ตัว Relay)** จะโชว์ Binding ได้
-> ก็ต่อเมื่อ DIST-SW1 **เป็น DHCP Server เอง** เท่านั้น — ในกรณีที่ใช้ Relay ไปหา Server ภายนอก
-> (เหมือน Scenario นี้ที่ไปหา DHCP-DNS-SRV) การยืนยัน Binding ที่แท้จริงต้องเช็คที่ตัว Server
-> ปลายทางโดยตรง (เช่น `show dhcp lease` บน ISC-DHCP หรือ DHCP Console บน Windows Server) —
-> Output ข้างบนเป็นตัวอย่างสรุปเพื่อความเข้าใจของ Concept เท่านั้น ในทางปฏิบัติให้ยึด
-> Client ที่ได้ IP จริงเป็นหลักฐานสุดท้าย
-
-### 612.7 บทเรียนสำหรับ Checklist การสร้าง VLAN ใหม่
-
-| ขั้นตอน | Part ที่เกี่ยวข้อง | มักถูกลืมไหม |
-|---|---|---|
-| สร้าง VLAN, Assign Access Port | Part 3 | ไม่ค่อยลืม (ทำเป็นประจำ) |
-| สร้าง SVI, ใส่ IP, เปิด Trunk Allowed VLAN | Part 4, 10 | ไม่ค่อยลืม |
-| ตั้ง HSRP VIP ถ้าเป็น VLAN แบบ Dual-homed | Part 18 | **มักลืมถ้า SVI เดียว** |
-| **`ip helper-address` ถ้า DHCP Server อยู่ VLAN อื่น** | **Part 16** | **ลืมบ่อยที่สุด — ไม่มี Error เตือน** |
-| ACL/Port Security ที่เกี่ยวข้อง | Part 14, 21 | แล้วแต่ Policy องค์กร |
+> **ข้อสังเกตสำคัญ**: `show ip dhcp binding` ยืนยัน Binding ได้ก็ต่อเมื่อ Device นั้น **เป็น
+> DHCP Server เอง** — กรณีนี้ใช้ Relay ไปหา Server ภายนอก การยืนยันที่แท้จริงต้องเช็คที่ตัว
+> Server ปลายทางโดยตรง (`show dhcp lease` บน ISC-DHCP) แต่ Client ที่ได้ IP จริงคือหลักฐาน
+> สุดท้ายที่สำคัญที่สุดเสมอ
 
 > **ข้อสอบ ENARSI มักถามแนวนี้**: "Client ใน VLAN ใหม่ไม่ได้ IP เลย แต่ VLAN อื่นปกติทุกอย่าง"
-> — คำตอบส่วนใหญ่คือ Checklist ข้อที่ 4 นี้ ถูกตรวจสอบก่อนเสมอเพราะเป็นสาเหตุที่พบบ่อยที่สุด
+> — คำตอบส่วนใหญ่คือ `ip helper-address` ตกหล่นตอน Provision เพราะเป็นสาเหตุที่พบบ่อยที่สุด
 > และไม่มี Error Message ใดๆ เตือนให้รู้ตัว
 
 ---
@@ -255,10 +243,9 @@ Traffic ทั้งหมดของ PC เครื่องนี้จะ�
 ยังทำงานปกติและ HSRP ควร Failover ให้ได้ (แต่ Client ไม่รู้จัก VIP เลยไม่ Failover ตามไปด้วย)
 
 > **จุดที่อันตรายที่สุดของ Scenario นี้**: นี่**ไม่ใช่ปัญหาที่ทำให้ Connectivity ขาดทันที** —
-> Client ยังใช้งานได้ปกติทุกอย่างตอนที่ DIST-SW1 ทำงานอยู่ ทำให้ปัญหานี้ **แอบซ่อนอยู่เป็นเดือน
-> จนกว่าจะมีเหตุการณ์ DIST-SW1 Down จริง** แล้วถึงจะรู้ตัวว่า Redundancy ที่ตั้งใจทำไว้ไม่ทำงาน
-> เลยสำหรับ Client กลุ่มนี้ — เป็นเหตุผลว่าทำไม Post-change Verification (ตรวจสอบทุกระบบที่
-> เกี่ยวข้องหลังเปลี่ยน Config ใหญ่) ถึงสำคัญมาก ไม่ใช่แค่ตรวจจุดที่แก้ไขโดยตรง
+> Client ใช้งานได้ปกติตอนที่ DIST-SW1 ทำงานอยู่ ปัญหานี้จึง **แอบซ่อนอยู่ได้เป็นเดือน** จนกว่าจะ
+> มีเหตุการณ์ DIST-SW1 Down จริงถึงจะรู้ตัวว่า Redundancy ที่ตั้งใจทำไว้ไม่ทำงานสำหรับ Client
+> กลุ่มนี้เลย
 
 ### 613.3 การไล่ตาม Checklist
 
@@ -346,10 +333,9 @@ Gateway เปลี่ยนเป็น `10.10.10.1` (VIP) ถูกต้อ�
 ชั่วคราวและยืนยันว่า PC ยัง Ping ผ่าน Gateway ได้ต่อเนื่องผ่าน DIST-SW2 (HSRP Active ใหม่) โดยไม่
 Drop Connectivity เลย — พิสูจน์ว่า Redundancy ทำงานสมบูรณ์ตามที่ตั้งใจแล้ว
 
-> **บทเรียนสำคัญของ Scenario นี้**: ทุกครั้งที่มีการเปลี่ยน Gateway/VIP ของ VLAN ใด (HSRP/VRRP
-> Failover Design ใหม่, Re-IP, ย้าย Subnet) ต้อง **เพิ่ม "ตรวจสอบ/แก้ Scope DHCP ที่เกี่ยวข้อง"
-> เป็นหนึ่งใน Change Checklist เสมอ** — เป็นจุดที่ตกหล่นบ่อยมากเพราะ DHCP Server มักอยู่นอก
-> ความรับผิดชอบของทีม Network โดยตรง
+> **บทเรียน**: ทุกครั้งที่เปลี่ยน Gateway/VIP ของ VLAN ใด ต้องเพิ่ม "ตรวจสอบ/แก้ Scope DHCP
+> ที่เกี่ยวข้อง" เป็นหนึ่งใน Change Checklist เสมอ — เป็นจุดที่ตกหล่นบ่อยเพราะ DHCP Server
+> มักอยู่นอกความรับผิดชอบของทีม Network โดยตรง
 
 ---
 
@@ -452,17 +438,14 @@ Pool VOICE-PHONES :
 **`Available addresses : 171`** — เหลือ Pool เพียงพอสำหรับ IP Phone ที่เหลือรวมถึงการเติบโต
 ในอนาคตอันใกล้ ทดสอบเสียบ IP Phone เครื่องใหม่และยืนยันว่า Register สำเร็จภายในไม่กี่วินาที
 
-> **Best Practice ป้องกันปัญหานี้ในอนาคต**: ตั้ง `ip dhcp pool` ให้ Log เตือนก่อน Pool เต็มด้วย
-> `ip dhcp limited-broadcast-address` (สำหรับบางกรณี) หรือที่สำคัญกว่าคือใช้
-> **`utilization mark high <percent>`** ผูกกับ SNMP Trap เพื่อให้ NOC-SRV แจ้งเตือนล่วงหน้า
-> ก่อน Pool เต็มจริง แทนที่จะรอให้ Helpdesk แจ้งเข้ามาทีหลัง:
+> **Best Practice ป้องกันปัญหานี้ในอนาคต**: ตั้ง **`utilization mark high <percent>`** ผูกกับ
+> SNMP Trap เพื่อให้ NOC-SRV แจ้งเตือนล่วงหน้าก่อน Pool เต็มจริง:
 > ```
 > DIST-SW2(dhcp-config)# utilization mark high 80
 > DIST-SW2(dhcp-config)# utilization mark low 60
 > ```
-> ตั้งค่านี้ทำให้ IOS Generate Syslog เตือนอัตโนมัติเมื่อ Pool ใช้งานเกิน 80% — ผูกกับ Central
-> Syslog ที่ Config ไว้แล้วใน [Part 17 Step 165](part-017-ntp-syslog-snmp.md) ทำให้ทีมงานรู้ตัว
-> **ก่อน** Pool เต็มจริง ไม่ใช่รู้ทีหลังจาก Helpdesk Ticket
+> ค่านี้ทำให้ IOS Generate Syslog เตือนอัตโนมัติเมื่อ Pool ใช้งานเกิน 80% ผ่าน Central Syslog
+> จาก [Part 17](part-017-ntp-syslog-snmp.md) — รู้ตัว **ก่อน** Pool เต็มจริง ไม่ใช่รู้จาก Ticket
 
 ---
 
@@ -579,11 +562,9 @@ WAN-EDGE-2# show ntp associations detail
 
 `authenticated` และ `valid` กลับมาแล้ว — Sync สำเร็จ
 
-> **บทเรียนรวมของ Step นี้**: NTP ไม่ Sync มีได้แค่ 2 กลุ่มสาเหตุหลักเสมอ คือ **"ไปไม่ถึง"**
-> (Routing/ACL/Firewall — Sub-scenario A) กับ **"ไปถึงแต่ไม่ได้รับความเชื่อถือ"**
-> (Authentication Mismatch — Sub-scenario B) — `show ntp associations detail` คือคำสั่งเดียว
-> ที่แยกแยะสองกลุ่มนี้ได้ทันที: ถ้าเห็น `stratum 16`/`insane`/`invalid` ตั้งแต่ต้นแบบไม่มี
-> Response เลย มักเป็นกลุ่ม A ส่วนถ้าเห็น `unauthenticated` ชัดๆ คือกลุ่ม B แน่นอน
+> **บทเรียนรวม**: NTP ไม่ Sync มีได้แค่ 2 กลุ่มสาเหตุหลักเสมอ — **"ไปไม่ถึง"** (Routing/ACL —
+> Sub-scenario A) กับ **"ไปถึงแต่ไม่ได้รับความเชื่อถือ"** (Authentication Mismatch —
+> Sub-scenario B) — `show ntp associations detail` แยกสองกลุ่มนี้ได้ทันที
 
 ---
 
@@ -601,9 +582,8 @@ WAN-EDGE-2(config)# logging source-interface GigabitEthernet0/0/1
 
 ในขณะเดียวกัน ทีม Security มี ACL Management-plane Hardening บน CORE-SW2 (จุดที่ Traffic
 ต้องผ่านไปยัง VLAN 99/NOC-SRV) ที่ **อนุญาตเฉพาะ Traffic จาก Loopback Range (`1.1.1.0/24`)
-เท่านั้น** สำหรับ Service ฝั่ง Management (Syslog/SNMP/NTP) — เป็น Best Practice ที่ถูกต้อง
-(Loopback เป็น Source ที่คงที่กว่า Physical Interface) แต่กลายเป็นปัญหาเมื่อ Source-interface
-ของ WAN-EDGE-2 ไม่ตรงกับ Policy นี้อีกต่อไป
+เท่านั้น** สำหรับ Service ฝั่ง Management — Best Practice ที่ถูกต้อง (Loopback คงที่กว่า
+Physical Interface) แต่กลายเป็นปัญหาเมื่อ Source-interface ของ WAN-EDGE-2 ไม่ตรงกับ Policy นี้
 
 ```
 CORE-SW2# show ip access-lists MGMT-PLANE-ACL
@@ -712,10 +692,9 @@ DIST-SW4# show logging | include Trap logging
 ทดสอบ Failover อีกครั้ง (Manual `standby 40 priority` เปลี่ยนชั่วคราว) และยืนยันว่า NOC-SRV
 เห็น `%HSRP-5-STATECHANGE` เข้ามาใหม่ตรงเวลาทันที
 
-> **บทเรียนสำคัญ**: ถ้าต้องการ "ลด Noise" ของ Log จริงๆ ให้ทำที่ **ฝั่ง Collector/SIEM
-> (Filter/Alert Rule ที่ NOC-SRV)** แทนการลด `logging trap` บนอุปกรณ์ต้นทาง — เพราะการลดที่
-> ต้นทางเสี่ยงตัดข้อมูลสำคัญที่ต้องใช้ Troubleshoot ทีหลังหายไปแบบกู้คืนไม่ได้ (Log ที่ไม่ถูกส่ง
-> ออกไปเลยจะไม่มีทางย้อนดูจาก Remote Collector ได้อีก ต่างจาก Local Buffer ที่ยังเก็บไว้ชั่วคราว)
+> **บทเรียน**: ถ้าต้องการ "ลด Noise" ของ Log ให้ทำที่ **ฝั่ง Collector/SIEM** (Filter/Alert Rule)
+> แทนการลด `logging trap` บนอุปกรณ์ต้นทาง — Log ที่ไม่ถูกส่งไปเลยจะไม่มีทางย้อนดูจาก Remote
+> Collector ได้อีก ต่างจาก Local Buffer ที่ยังเก็บไว้ชั่วคราว
 
 ---
 
@@ -780,11 +759,9 @@ row status: active
 ```
 
 **`readview: <no readview specified>`** — พบสาเหตุแล้ว: Group `NOC-MONITOR-GROUP` **ไม่มี
-Read View ผูกอยู่เลย** แปลว่า User `noc-svc-v2` แม้จะ Authenticate ผ่าน (Username/Password/
-Encryption ถูกต้องทุกอย่าง) แต่เมื่อ NOC-SRV ส่ง `GET` Request เข้ามาถาม OID ใดๆ ก็ตาม
-CORE-SW2 จะตอบกลับด้วย **Authorization Error** (ไม่ใช่ Timeout) เพราะไม่มี View ให้ "มองเห็น"
-MIB Tree เลยแม้แต่จุดเดียว — ฝั่ง NMS มักตีความ Authorization Error แบบต่อเนื่องนี้เหมือนกับ
-Device Down เพราะไม่ได้รับข้อมูลอะไรกลับมาเลย
+Read View ผูกอยู่เลย** แปลว่า User `noc-svc-v2` แม้ Authenticate ผ่านทุกอย่าง แต่เมื่อ NOC-SRV
+ส่ง `GET` Request ถาม OID ใดๆ CORE-SW2 จะตอบกลับด้วย **Authorization Error** เพราะไม่มี View
+ให้ "มองเห็น" MIB Tree เลย — NMS ตีความ Error แบบนี้เหมือนกับ Device Down
 
 **ยืนยันด้วย Debug (ทำใน Maintenance Window เท่านั้น เพราะ Debug SNMP ส่ง Log ปริมาณมาก)**:
 
@@ -830,10 +807,9 @@ SNMPv2-MIB::sysUpTime.0 = Timeticks: (89234500) 10:19:05.00
 
 Poll สำเร็จ — NOC-SRV Dashboard เปลี่ยนสถานะ CORE-SW2 กลับเป็น "Up" ภายใน 1 รอบ Poll ถัดไป
 
-> **หลักในการวินิจฉัย SNMP ที่ต้องจำ**: ไล่เทียบ **User → Group → View** เป็นลำดับเสมอ
-> (`show snmp user` → `show snmp group` → `show snmp view <name>`) — ปัญหาส่วนใหญ่ของ SNMPv3
-> อยู่ที่ "ห่วงโซ่" นี้ขาดตอนจุดใดจุดหนึ่ง ไม่ใช่ที่ Network Path เพราะ SNMPv3 เข้ารหัสและยืนยัน
-> ตัวตนที่ Layer Application ทั้งหมด ไม่ใช่ปัญหา Routing/ACL แบบ NTP ใน Step 615
+> **หลักในการวินิจฉัย SNMP**: ไล่เทียบ **User → Group → View** เป็นลำดับเสมอ (`show snmp user`
+> → `show snmp group` → `show snmp view <name>`) — ปัญหาส่วนใหญ่ของ SNMPv3 อยู่ที่ "ห่วงโซ่" นี้
+> ขาดตอนจุดใดจุดหนึ่ง ไม่ใช่ที่ Network Path เหมือน NTP ใน Step 615
 
 ---
 
@@ -935,12 +911,10 @@ Destination filename [wan-edge-1-confg]?
 1847 bytes copied in 0.891 secs
 ```
 
-> **บทเรียนของ Scenario นี้**: ปัญหา "Resolve DNS ไม่ได้" มีได้ 3 ชั้นเสมอ — **(1) Function
-> ปิดอยู่ (`ip domain-lookup`), (2) ไปหา Server ผิดตัวหรือไปไม่ถึง (`ip name-server`/
-> Routing/ACL), (3) Server ไปถึงแล้วแต่ไม่มี Record จริง (`NXDOMAIN`)** — ต้องไล่ตามลำดับ
-> เสมอเพราะ Error Message ของ IOS ในแต่ละชั้นต่างกันชัดเจน (`Unrecognized host` = ชั้น 1,
-> `[timed out]` = ชั้น 2, ถ้า Query สำเร็จแต่ Server ตอบ NXDOMAIN IOS จะขึ้น
-> `% Bad IP address or host name` แทน = ชั้น 3)
+> **บทเรียน**: ปัญหา "Resolve DNS ไม่ได้" มีได้ 3 ชั้นเสมอ — **(1) Function ปิดอยู่
+> (`ip domain-lookup`), (2) ไปหา Server ผิดตัวหรือไปไม่ถึง (`ip name-server`/Routing/ACL),
+> (3) Server ไปถึงแล้วแต่ไม่มี Record จริง (`NXDOMAIN`)** — Error Message ของ IOS ต่างกัน
+> ชัดเจนในแต่ละชั้น (`Unrecognized host` = ชั้น 1, `[timed out]` = ชั้น 2)
 
 ---
 
@@ -995,11 +969,9 @@ Time source is user configuration
 ```
 
 พบ Root Cause ทันที: **`Time source is user configuration`** (ไม่ใช่ NTP) และวันที่แสดง
-**`Jan 1 2019`** — Clock ของ WLC-1 กลับไปเป็นค่า Default หลังจาก Firmware Upgrade ล่าสุด
-(WLC-1 Reboot แล้ว NTP Client Config หายไปจาก Bug ของ Upgrade Process บางเวอร์ชัน หรือ
-Config ไม่ได้ Save ก่อน Reload) เพราะ Clock ปี 2019 นั้น **ก่อนหน้า NotBefore ของ Certificate
-จริง (Issue ปี 2026)** ทำให้ WLC-1 มองว่า Certificate "ยังไม่ถึงเวลาใช้งาน" ทั้งๆ ที่ในความเป็นจริง
-Certificate ใช้งานได้สมบูรณ์
+**`Jan 1 2019`** — Clock ของ WLC-1 กลับไปเป็นค่า Default หลัง Firmware Upgrade ล่าสุด (Config
+ไม่ได้ Save ก่อน Reload) เพราะ Clock ปี 2019 อยู่ **ก่อนหน้า NotBefore ของ Certificate จริง**
+(Issue ปี 2026) ทำให้ WLC-1 มองว่า Certificate "ยังไม่ถึงเวลาใช้งาน" ทั้งที่ใช้งานได้สมบูรณ์
 
 ```
 WLC-1# show ntp status
@@ -1044,12 +1016,10 @@ Number of Local Clients: 214
 Client กลับมา Authenticate สำเร็จทั้งหมดทันที **โดยไม่ต้องแก้ Certificate หรือ RADIUS/ISE
 Config ใดๆ เลย** — พิสูจน์ชัดเจนว่า Root Cause คือ Clock เพียงอย่างเดียว
 
-> **บทเรียนที่สำคัญที่สุดของ Part นี้**: เมื่อเจอปัญหาที่ **"ดูไม่เกี่ยวกับ Infra Service เลย"**
-> (เช่น Certificate/TLS/Authentication Failure แบบเฉียบพลันที่กระทบทุกคนพร้อมกัน) **ให้ตรวจ
-> `show clock detail` และ `show ntp status` เป็นหนึ่งในขั้นตอนแรกๆ เสมอ** เพราะ Time-related
-> Failure มักมี "ลักษณะพร้อมกันทั้งระบบ" (Everyone breaks at once) ต่างจากปัญหา Hardware/
-> Config เจาะจงจุดเดียวที่มักกระทบทีละส่วน — นี่คือ Pattern ที่ต้องจำไว้ใช้แยกแยะสาเหตุได้เร็ว
-> ในข้อสอบ ENARSI และในสนามจริง
+> **บทเรียนสำคัญที่สุดของ Part นี้**: เมื่อเจอปัญหาที่ **"ดูไม่เกี่ยวกับ Infra Service เลย"**
+> (Certificate/TLS/Authentication Failure ที่กระทบทุกคนพร้อมกัน) **ให้ตรวจ `show clock detail`
+> และ `show ntp status` เป็นหนึ่งในขั้นตอนแรกๆ เสมอ** เพราะ Time-related Failure มักมี
+> "ลักษณะพร้อมกันทั้งระบบ" ต่างจากปัญหา Hardware/Config เจาะจงจุดเดียว
 
 ---
 
