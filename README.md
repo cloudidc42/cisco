@@ -95,21 +95,21 @@ Lab scenario, และคำถามทวนความเข้าใจพ
 
 | Part | Step | หัวข้อ | สถานะ |
 |---|---|---|---|
-| 56 | 551–560 | Advanced EIGRP Troubleshooting | ⏳ |
-| 57 | 561–570 | Advanced OSPF Troubleshooting | ⏳ |
-| 58 | 571–580 | Advanced BGP Troubleshooting | ⏳ |
-| 59 | 581–590 | Route Redistribution Troubleshooting | ⏳ |
-| 60 | 591–600 | DMVPN & VPN Troubleshooting | ⏳ |
-| 61 | 601–610 | Infrastructure Security Troubleshooting | ⏳ |
-| 62 | 611–620 | Infra Services (DHCP/NTP/Syslog) Troubleshooting | ⏳ |
-| 63 | 621–630 | Advanced NAT Scenarios | ⏳ |
-| 64 | 631–640 | Path Control & PBR Troubleshooting | ⏳ |
-| 65 | 641–650 | Multicast Troubleshooting | ⏳ |
-| 66 | 651–660 | Wireless Troubleshooting | ⏳ |
-| 67 | 661–670 | Automation Troubleshooting | ⏳ |
-| 68 | 671–680 | QoS Troubleshooting | ⏳ |
-| 69 | 681–690 | Full Troubleshooting Mega-Lab #1 | ⏳ |
-| 70 | 691–700 | ENARSI Capstone & Mock Exam | ⏳ |
+| 56 | 551–560 | [part-056-eigrp-troubleshooting.md](docs/part-056-eigrp-troubleshooting.md) | Advanced EIGRP Troubleshooting | ✅ |
+| 57 | 561–570 | [part-057-ospf-troubleshooting.md](docs/part-057-ospf-troubleshooting.md) | Advanced OSPF Troubleshooting | ✅ |
+| 58 | 571–580 | [part-058-bgp-troubleshooting.md](docs/part-058-bgp-troubleshooting.md) | Advanced BGP Troubleshooting | ✅ |
+| 59 | 581–590 | [part-059-redistribution-troubleshooting.md](docs/part-059-redistribution-troubleshooting.md) | Route Redistribution Troubleshooting | ✅ |
+| 60 | 591–600 | [part-060-dmvpn-vpn-troubleshooting.md](docs/part-060-dmvpn-vpn-troubleshooting.md) | DMVPN & VPN Troubleshooting | ✅ |
+| 61 | 601–610 | [part-061-infra-security-troubleshooting.md](docs/part-061-infra-security-troubleshooting.md) | Infrastructure Security Troubleshooting | ✅ |
+| 62 | 611–620 | [part-062-infra-services-troubleshooting.md](docs/part-062-infra-services-troubleshooting.md) | Infra Services (DHCP/NTP/Syslog) Troubleshooting | ✅ |
+| 63 | 621–630 | [part-063-advanced-nat-scenarios.md](docs/part-063-advanced-nat-scenarios.md) | Advanced NAT Scenarios | ✅ |
+| 64 | 631–640 | [part-064-path-control-pbr-troubleshooting.md](docs/part-064-path-control-pbr-troubleshooting.md) | Path Control & PBR Troubleshooting | ✅ |
+| 65 | 641–650 | [part-065-multicast-troubleshooting.md](docs/part-065-multicast-troubleshooting.md) | Multicast Troubleshooting | ✅ |
+| 66 | 651–660 | [part-066-wireless-troubleshooting.md](docs/part-066-wireless-troubleshooting.md) | Wireless Troubleshooting | ✅ |
+| 67 | 661–670 | [part-067-automation-troubleshooting.md](docs/part-067-automation-troubleshooting.md) | Automation Troubleshooting | ✅ |
+| 68 | 671–680 | [part-068-qos-troubleshooting.md](docs/part-068-qos-troubleshooting.md) | QoS Troubleshooting | ✅ |
+| 69 | 681–690 | [part-069-mega-lab-1.md](docs/part-069-mega-lab-1.md) | Full Troubleshooting Mega-Lab #1 | ✅ |
+| 70 | 691–700 | [part-070-enarsi-capstone-mock-exam.md](docs/part-070-enarsi-capstone-mock-exam.md) | ENARSI Capstone & Mock Exam | ✅ |
 
 ### ระดับ CCIE Enterprise Infrastructure (Part 71–100)
 
