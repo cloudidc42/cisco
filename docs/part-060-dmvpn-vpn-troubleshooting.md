@@ -633,11 +633,11 @@ BRANCH2-RTR(config-if)# exit
 WAN-EDGE-1# show ip ospf neighbor
 
 Neighbor ID     Pri   State           Dead Time   Address         Interface
-172.20.1.1        0   FULL/  -        00:01:44    172.16.100.11   Tunnel0
+172.20.0.1        0   FULL/  -        00:01:44    172.16.100.11   Tunnel0
 ```
 
-**เห็น Neighbor ของ BRANCH-RTR (`172.20.1.1`) แต่ไม่มี Neighbor ของ BRANCH2-RTR
-(`172.20.2.1`) เลย** ทั้งที่ NHRP บอกว่า Tunnel ขึ้นแล้ว — ยืนยันว่าปัญหาอยู่ที่ OSPF โดยเฉพาะ
+**เห็น Neighbor ของ BRANCH-RTR (`172.20.0.1`) แต่ไม่มี Neighbor ของ BRANCH2-RTR
+(`172.20.1.1`) เลย** ทั้งที่ NHRP บอกว่า Tunnel ขึ้นแล้ว — ยืนยันว่าปัญหาอยู่ที่ OSPF โดยเฉพาะ
 
 ```
 WAN-EDGE-1# debug ip ospf adj
@@ -656,7 +656,7 @@ Network Type ไม่ตรงกัน (เป็นกฎที่ OSPF บ�
 
 ```
 BRANCH2-RTR# show ip ospf interface Tunnel0 | include Network Type
-  Process ID 100, Router ID 172.20.2.1, Network Type BROADCAST, Cost: 1
+  Process ID 100, Router ID 172.20.1.1, Network Type BROADCAST, Cost: 1
 ```
 
 `Network Type BROADCAST` ยืนยัน Root Cause ชัดเจน — ต่างจาก WAN-EDGE-1 ที่ควรเป็น
@@ -688,11 +688,11 @@ BRANCH2-RTR(config-if)# exit
 WAN-EDGE-1# show ip ospf neighbor
 
 Neighbor ID     Pri   State           Dead Time   Address         Interface
-172.20.1.1        0   FULL/  -        00:01:38    172.16.100.11   Tunnel0
-172.20.2.1        0   FULL/  -        00:01:49    172.16.100.12   Tunnel0
+172.20.0.1        0   FULL/  -        00:01:38    172.16.100.11   Tunnel0
+172.20.1.1        0   FULL/  -        00:01:49    172.16.100.12   Tunnel0
 ```
 
-Neighbor ของ BRANCH2-RTR (`172.20.2.1`) ขึ้น `FULL/ -` แล้ว (ไม่มี `/DR`/`/BDR` ยืนยัน
+Neighbor ของ BRANCH2-RTR (`172.20.1.1`) ขึ้น `FULL/ -` แล้ว (ไม่มี `/DR`/`/BDR` ยืนยัน
 Point-to-Multipoint ทำงานถูกต้องเหมือน Part 53)
 
 ---
@@ -951,7 +951,7 @@ BRANCH4-RTR(ipsec-profile)# set transform-set DMVPN-TSET
 BRANCH4-RTR(ipsec-profile)# exit
 !
 BRANCH4-RTR(config)# interface Loopback0
-BRANCH4-RTR(config-if)# ip address 172.20.4.1 255.255.255.255
+BRANCH4-RTR(config-if)# ip address 172.20.3.1 255.255.255.255
 BRANCH4-RTR(config-if)# exit
 !
 BRANCH4-RTR(config)# interface Tunnel0
@@ -972,7 +972,7 @@ BRANCH4-RTR(config-if)# exit
 ! <-- Bug #2 (แยกเป็นการขาดหาย ไม่ใช่บรรทัดผิด): ไม่มี "ip nhrp shortcut" เลยใน Interface นี้
 !
 BRANCH4-RTR(config)# router ospf 100
-BRANCH4-RTR(config-router)# router-id 172.20.4.1
+BRANCH4-RTR(config-router)# router-id 172.20.3.1
 BRANCH4-RTR(config-router)# area 51 stub
 BRANCH4-RTR(config-router)# passive-interface default
 BRANCH4-RTR(config-router)# no passive-interface Tunnel0
@@ -1053,7 +1053,7 @@ WAN-EDGE-1# show ip nhrp | include 172.16.100.14
 เลย) ไปตรวจ Layer 5 ต่อ:
 
 ```
-WAN-EDGE-1# show ip ospf neighbor | include 172.20.4.1
+WAN-EDGE-1# show ip ospf neighbor | include 172.20.3.1
 (ไม่มีผลลัพธ์ — ไม่พบ Neighbor นี้เลย)
 
 WAN-EDGE-1# debug ip ospf adj
@@ -1072,8 +1072,8 @@ BRANCH4-RTR(config-if)# exit
 Verify:
 
 ```
-WAN-EDGE-1# show ip ospf neighbor | include 172.20.4.1
-172.20.4.1        0   FULL/  -        00:01:52    172.16.100.14   Tunnel0
+WAN-EDGE-1# show ip ospf neighbor | include 172.20.3.1
+172.20.3.1        0   FULL/  -        00:01:52    172.16.100.14   Tunnel0
 ```
 
 Layer 5 ผ่านแล้ว — ทดสอบ Ping ข้าม Site:
@@ -1134,8 +1134,8 @@ BRANCH4-RTR# show ip nhrp shortcut
 WAN-EDGE-1# show crypto ipsec sa peer 198.51.100.14 | include pkts encaps
     #pkts encaps: 87, #pkts encrypt: 87, #pkts digest: 87
 
-WAN-EDGE-1# show ip ospf neighbor | include 172.20.4.1
-172.20.4.1        0   FULL/  -        00:05:20    172.16.100.14   Tunnel0
+WAN-EDGE-1# show ip ospf neighbor | include 172.20.3.1
+172.20.3.1        0   FULL/  -        00:05:20    172.16.100.14   Tunnel0
 
 WAN-EDGE-1# show dmvpn brief | include 198.51.100.14
 Tu0             198.51.100.14      172.16.100.14     UP     D

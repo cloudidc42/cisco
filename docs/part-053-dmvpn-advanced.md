@@ -3,7 +3,7 @@
 
 > ต่อจาก [Part 52 — DMVPN Fundamentals (Phase 1/2)](part-052-dmvpn-fundamentals.md) ที่เราสร้าง
 > **DMVPN Cloud** ตัวแรกของหลักสูตรสำเร็จแล้ว — **WAN-EDGE-1** เป็น Hub (NHRP Server), **BRANCH-RTR**
-> และ **BRANCH2-RTR** เป็น Spoke ทั้งสอง ใช้ mGRE Tunnel0 ร่วมกัน, **EIGRP AS 100** เป็น Routing
+> และ **BRANCH2-RTR** เป็น Spoke ทั้งสอง ใช้ mGRE Tunnel0 ร่วมกัน, **EIGRP AS 200** เป็น Routing
 > Protocol ผ่าน Tunnel, และป้องกัน Traffic ด้วย **IPsec Profile (`DMVPN-PROFILE`)** ที่ผูกกับ
 > Tunnel0 โดยตรง (`tunnel protection ipsec profile`) — เราได้เห็นว่า Phase 2 DMVPN ทำให้ Spoke
 > คุยกันตรง (Spoke-to-Spoke) ได้โดยไม่ต้องผ่าน Hub แต่ต้องแลกกับข้อจำกัดเรื่อง Routing Protocol
@@ -37,7 +37,7 @@
 | DMVPN Tunnel Subnet | `172.16.100.0/24` (NBMA-Independent, ไม่เกี่ยวกับ Internet จริง) |
 | NHRP Network-ID / Tunnel Key | `100` |
 | IPsec Profile | `DMVPN-PROFILE` (IKEv2 + `esp-aes 256 esp-sha256-hmac`) |
-| Routing Protocol (Phase 2) | EIGRP AS 100 บน Tunnel0 (`no ip split-horizon eigrp 100` ที่ Hub) |
+| Routing Protocol (Phase 2) | EIGRP AS 200 บน Tunnel0 (`no ip split-horizon eigrp 200` ที่ Hub) |
 | Spoke LAN | BRANCH-RTR = `10.20.1.0/24`, BRANCH2-RTR = `10.20.2.0/24` |
 | WAN (NBMA) Underlay | WAN-EDGE-1 = `203.0.113.2` (ISP-RTR), BRANCH-RTR/BRANCH2-RTR = `198.51.100.2/6` |
 
@@ -133,7 +133,7 @@ Spoke-A ◄───────────────────────
 
 ### เปลี่ยน Routing Protocol จาก EIGRP → OSPF เพื่อพิสูจน์ความอิสระของ Phase 3
 
-Part 52 ใช้ EIGRP AS 100 พร้อม `no ip split-horizon eigrp 100` ที่ Hub — Part นี้จะ **ถอด EIGRP
+Part 52 ใช้ EIGRP AS 200 พร้อม `no ip split-horizon eigrp 200` ที่ Hub — Part นี้จะ **ถอด EIGRP
 ออกทั้งหมด** แล้วแทนที่ด้วย **OSPF Process 100, Area 51** (Area แยกเฉพาะ DMVPN Cloud ไม่ปนกับ
 Backbone Area 0 ของ Campus) โดยใช้ **Network Type `point-to-multipoint`** บน Tunnel0 ซึ่งเป็น
 Best Practice มาตรฐานสำหรับ DMVPN เพราะ:
@@ -146,10 +146,10 @@ Best Practice มาตรฐานสำหรับ DMVPN เพราะ:
 ### Config เต็ม — WAN-EDGE-1 (Hub, Phase 3 + OSPF)
 
 ```
-WAN-EDGE-1(config)# router eigrp 100
+WAN-EDGE-1(config)# router eigrp 200
 WAN-EDGE-1(config-router)# no network 172.16.100.0 0.0.0.255
 WAN-EDGE-1(config-router)# no network 10.10.254.0 0.0.0.3
-WAN-EDGE-1(config)# no router eigrp 100
+WAN-EDGE-1(config)# no router eigrp 200
 ! ถอด EIGRP ออกทั้ง Process เพราะ Part นี้เปลี่ยนไปใช้ OSPF ทั้งหมดบน WAN Domain
 
 WAN-EDGE-1(config)# interface Tunnel0
@@ -186,7 +186,7 @@ WAN-EDGE-1(config-router)# exit
 ### Config เต็ม — BRANCH-RTR (Spoke, Phase 3 + OSPF)
 
 ```
-BRANCH-RTR(config)# no router eigrp 100
+BRANCH-RTR(config)# no router eigrp 200
 ! ถอด EIGRP ออกเช่นเดียวกับ Hub
 
 BRANCH-RTR(config)# interface Tunnel0
@@ -207,7 +207,7 @@ BRANCH-RTR(config-if)# tunnel protection ipsec profile DMVPN-PROFILE
 BRANCH-RTR(config-if)# exit
 
 BRANCH-RTR(config)# router ospf 100
-BRANCH-RTR(config-router)# router-id 172.20.1.1
+BRANCH-RTR(config-router)# router-id 172.20.0.1
 BRANCH-RTR(config-router)# area 51 stub
 BRANCH-RTR(config-router)# passive-interface default
 BRANCH-RTR(config-router)# no passive-interface Tunnel0
@@ -216,7 +216,7 @@ BRANCH-RTR(config-router)# network 10.20.1.0 0.0.0.255 area 51
 BRANCH-RTR(config-router)# exit
 ```
 
-BRANCH2-RTR ใช้ config รูปแบบเดียวกัน โดยเปลี่ยน `ip address 172.16.100.12`, `router-id 172.20.2.1`,
+BRANCH2-RTR ใช้ config รูปแบบเดียวกัน โดยเปลี่ยน `ip address 172.16.100.12`, `router-id 172.20.1.1`,
 และ `network 10.20.2.0 0.0.0.255 area 51`
 
 ### ตรวจสอบ OSPF Adjacency ผ่าน Tunnel0 (Point-to-Multipoint)
@@ -225,8 +225,8 @@ BRANCH2-RTR ใช้ config รูปแบบเดียวกัน โด�
 WAN-EDGE-1# show ip ospf neighbor
 
 Neighbor ID     Pri   State           Dead Time   Address         Interface
-172.20.1.1        0   FULL/  -        00:01:47    172.16.100.11   Tunnel0
-172.20.2.1        0   FULL/  -        00:01:52    172.16.100.12   Tunnel0
+172.20.0.1        0   FULL/  -        00:01:47    172.16.100.11   Tunnel0
+172.20.1.1        0   FULL/  -        00:01:52    172.16.100.12   Tunnel0
 ```
 
 `Pri = 0` และ `State = FULL/ -` (ไม่มี `/DR` หรือ `/BDR`) ยืนยันว่า Network Type
