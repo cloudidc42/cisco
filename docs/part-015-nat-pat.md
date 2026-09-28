@@ -639,8 +639,8 @@ Queued Packets: 0
 
 ### 149.4 ปัญหาที่พบบ่อยและวิธีแก้
 
-| ปัญหา | อาการ | สาเหตุ/วิธีแก้ |
-|---|---|---|
+| ปัญหา | อาการ | สาเหตุ | วิธีแก้ |
+|---|---|---|---|
 | **Asymmetric Routing** | NAT Session ถูกสร้างที่ Router A แต่ Traffic ขากลับวิ่งผ่าน Router B (เช่น มี WAN-EDGE-2 เป็น Path สำรอง) — Router B ไม่มี NAT State ของ Session นั้น จึงไม่รู้จะแปลง Destination กลับเป็น Inside Local อะไร | Packet ขากลับถูก Drop เพราะไม่มี NAT Entry ที่ตรงกัน | ต้องออกแบบ Routing ให้ Traffic ไป-กลับผ่าน NAT Device ตัวเดียวกันเสมอ (Symmetric Path) หรือใช้ NAT บนทั้งสอง Router พร้อม State Sync ในสภาพแวดล้อมที่ต้องการ Redundancy จริง |
 | **Translation Table เต็ม** | Host ใหม่ไม่สามารถออกอินเทอร์เน็ตได้ ทั้งที่ Config ถูกต้อง, `show ip nat statistics` แสดง `Total translations` สูงมาก | Session เก่าไม่ถูกเคลียร์ (Timeout ยาวเกินไป, หรือมี Application ที่เปิด Connection จำนวนมากผิดปกติ) | ปรับ Timeout ด้วย `ip nat translation timeout <sec>` (Default 86400s สำหรับ TCP ทั่วไป, `ip nat translation tcp-timeout` เฉพาะ TCP), หรือ `clear ip nat translation *` เพื่อบังคับล้าง (ระวังจะตัด Session ที่ Active อยู่จริงด้วย) |
 | **Dynamic NAT Pool หมด** | Host บางเครื่องใน VLAN ที่ใช้ Dynamic NAT (ไม่ใช่ PAT) ออกอินเทอร์เน็ตไม่ได้เป็นบางเครื่อง | Pool มี Address น้อยกว่าจำนวน Host ที่ Active พร้อมกัน — ดู Step 143 | เปลี่ยนไปใช้ PAT (`overload`) แทน Dynamic NAT ล้วนๆ เพราะ PAT ไม่มีข้อจำกัดนี้ |

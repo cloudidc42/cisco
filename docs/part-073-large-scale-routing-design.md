@@ -101,8 +101,8 @@ Pattern เดิมนี้ยังใช้ได้อยู่ไหม?**
 |---|---|
 | Building 1 (HQ เดิมจาก Part 1-35) | ใหญ่ที่สุด, All-Cisco, มี Area 1/2 อยู่แล้ว → **คง OSPF Area 0/1/2 เดิมไว้ทั้งหมด ไม่แตะ** |
 | Building 2-8 (สร้างใหม่ทั้งหมดตาม Part 72) | All-Cisco, ขนาดกลาง (~30-60 Router/อาคาร) → **OSPF 1 Process ต่ออาคาร (Single Area 0 ภายใน)** — เลือก OSPF แทน EIGRP เพราะต้องการ Hierarchy ที่ Standardize และเผื่อ Multi-vendor ในอนาคต (Data Center/Firewall Vendor อื่นมักรองรับ OSPF มากกว่า EIGRP) |
-| Building 9-10 (M&A ล่าสุด — สมมติชื่อ Site "RIVER-SIDE" และ "BKK-SOUTH") | มาพร้อม EIGRP AS 200 ที่ทำงานดีอยู่แล้ว, ทีมงานเดิมคุ้นเคย EIGRP | **ไม่แปลงเป็น OSPF ทันที** (Rip-and-Replace เสี่ยง Outage โดยไม่จำเป็น) — เก็บ EIGRP AS 200 ไว้เป็น Domain ของตัวเอง |
-| จำนวน Domain รวมทั้งหมด | 10 Domain (Building 1-10) + WAN Core | **> 3-4 Domain → ใช้ BGP เชื่อมทุก Domain แทน Mutual Redistribution** (รายละเอียดใน Step 723-724) |
+| Building 9-10 (M&A ล่าสุด — สมมติชื่อ Site "RIVER-SIDE" และ "BKK-SOUTH") | มาพร้อม EIGRP AS 200 ที่ทำงานดีอยู่แล้ว ทีมงานเดิมคุ้นเคย EIGRP → **ไม่แปลงเป็น OSPF ทันที** (Rip-and-Replace เสี่ยง Outage โดยไม่จำเป็น) — เก็บ EIGRP AS 200 ไว้เป็น Domain ของตัวเอง |
+| จำนวน Domain รวมทั้งหมด | 10 Domain (Building 1-10) + WAN Core → **> 3-4 Domain → ใช้ BGP เชื่อมทุก Domain แทน Mutual Redistribution** (รายละเอียดใน Step 723-724) |
 
 ผลลัพธ์: **มี IGP 2 ชนิดอยู่ในองค์กรเดียวกันจริง** (OSPF 9 Domain + EIGRP 2 Domain) — ซึ่งเป็น
 สถานการณ์ปกติมากในองค์กรจริงที่มีประวัติ M&A และเป็นเหตุผลที่ **BGP-glue Design ใน Step 723

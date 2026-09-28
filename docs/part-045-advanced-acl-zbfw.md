@@ -693,7 +693,7 @@ WAN-EDGE-1(config-sec-zone-pair)# exit
 | Layer ที่ทำงาน | Line-level (ผูกกับ VTY Line โดยเฉพาะ) | Zone-level (ผูกกับ Interface ที่เป็นสมาชิก Zone) |
 | Stateful | ไม่ (Stateless ACL ปกติ) | ได้ (ถ้าใช้ Action `inspect` แทน `pass`) |
 | ความซับซ้อนในการ Config | ง่าย (2-3 บรรทัด) | ซับซ้อนกว่า (ต้อง Class-Map + Policy-Map + Zone-Pair) |
-| ใช้ทดแทนกันได้หรือไม่ | **ใช้ควบคู่กัน (Defense-in-Depth)** — ไม่ใช่ Feature ที่แข่งกัน แต่ป้องกันคนละมุมของ Management Plane เดียวกัน |
+| ใช้ทดแทนกันได้หรือไม่ | ไม่ควรใช้แทนกันเดี่ยวๆ | **ใช้ควบคู่กัน (Defense-in-Depth)** — ไม่ใช่ Feature ที่แข่งกัน แต่ป้องกันคนละมุมของ Management Plane เดียวกัน |
 
 > **Best Practice**: ใช้ทั้งสองชั้นพร้อมกันเสมอ — `access-class` ป้องกัน VTY โดยเฉพาะ (เร็ว,
 > ง่าย, เบา) และ Self-Zone ของ ZBFW ป้องกัน Protocol Management อื่นที่ VTY ไม่ครอบคลุม — ตรงตาม

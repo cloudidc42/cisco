@@ -1384,5 +1384,5 @@ Virtual Link, LSA Type 6/7 แบบละเอียด, Route Filtering ด�
 และ Advanced Troubleshooting ของ LSDB Synchronization ที่ Scale ระดับ Enterprise จริง — ใช้ความรู้
 พื้นฐาน OSPF จาก Part 11-12 เป็นฐาน แต่ไปในเชิงลึกและซับซ้อนกว่ามาก
 
-**ไปต่อ:** Part 26 — Advanced OSPF (Multi-area, LSA Type 1-7) `part-026-advanced-ospf.md`
+**ไปต่อ:** [Part 26 — Advanced OSPF (Multi-area, LSA Type 1-7) →](part-026-advanced-ospf.md)
 (จุดเริ่มต้นของระดับ CCNP ENCOR)

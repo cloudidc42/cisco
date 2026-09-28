@@ -79,7 +79,9 @@
 | 130 | DC-SERVERS | 30130 | 10.130.30.0/24 | 10.130.30.0/24 (**subnet เดียวกัน**) | ✅ L2 Stretch | 10.130.30.1 |
 | 140 | DC-APP-DC1 | 30140 | 10.140.30.0/24 | - | ❌ (L3-only, local DC1) | 10.140.30.1 |
 | 141 | DC-APP-DC2 | 30141 | - | 10.141.30.0/24 | ❌ (L3-only, local DC2) | 10.141.30.1 |
-| VRF | TENANT-PROD | L3 VNI **50001** | ใช้ร่วมกันทั้งสอง Site เพื่อ route ระหว่าง VLAN140 ↔ VLAN141 ผ่าน Type-5 |
+
+> **VRF**: `TENANT-PROD` ใช้ **L3 VNI 50001** ร่วมกันทั้งสอง Site เพื่อ Route ระหว่าง VLAN140 ↔ VLAN141
+> ผ่าน EVPN Type-5
 
 > **Route-Target ข้าม AS**: เพราะ DC1 (AS65001) และ DC2 (AS65002) เป็นคนละ AS, ค่า RT แบบ `auto`
 > (ที่ embed AS ไว้ในตัว) จะ**ไม่ match กัน** — Part นี้ใช้ RT แบบ **explicit** ที่เหมือนกันทั้งสอง Site:
